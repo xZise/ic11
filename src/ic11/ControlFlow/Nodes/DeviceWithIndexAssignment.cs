@@ -4,12 +4,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class DeviceWithIndexAssignment : Node, IStatement, IExpressionContainer
 {
-    public INodeExpression DeviceIndexExpr;
-    public DeviceIndexType IndexType;
-    public INodeExpression? TargetIndexExpr;
-    public INodeExpression ValueExpr;
-    public DeviceTarget Target;
-    public string? MemberName;
+    public readonly INodeExpression DeviceIndexExpr;
+    public readonly DeviceIndexType IndexType;
+    public readonly INodeExpression? TargetIndexExpr;
+    public readonly INodeExpression ValueExpr;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
     public override int IndexSize => 2;
 
     public DeviceWithIndexAssignment(INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression valueExpr, string memberName)

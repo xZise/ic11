@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Instructions;
 public class StackPop : Instruction
 {
-    public Variable? Destination;
-    public string? Register;
+    public readonly Variable? Destination;
+    public readonly string? Register;
 
     public StackPop(Variable destination)
     {

@@ -10,7 +10,7 @@ using static Ic11Parser;
 namespace ic11.ControlFlow.TreeProcessing;
 public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 {
-    public FlowContext FlowContext;
+    public readonly FlowContext FlowContext;
 
     private INode CurrentNode
     {

@@ -3,9 +3,9 @@
 namespace ic11.ControlFlow.Instructions;
 public class StackPut : Instruction
 {
-    string Device;
-    public IExpression AddressExpression;
-    public IExpression ValueExpression;
+    public readonly string Device;
+    public readonly IExpression AddressExpression;
+    public readonly IExpression ValueExpression;
 
     public StackPut(string device, IExpression addressExpression, IExpression valueExpression)
     {

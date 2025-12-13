@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Instructions;
 public class StatementParam1 : Instruction
 {
-    public string Operation;
-    public IExpression Parameter;
+    public readonly string Operation;
+    public readonly IExpression Parameter;
 
     public StatementParam1(string operation, IExpression parameter)
     {

@@ -3,7 +3,7 @@
 namespace ic11.ControlFlow.Nodes;
 public class StatementParam0 : Node, IStatement
 {
-    public string Operation;
+    public readonly string Operation;
 
     public StatementParam0(string operation)
     {

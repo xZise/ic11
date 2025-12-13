@@ -4,11 +4,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class MemberAssignment : Node, IStatement, IExpressionContainer
 {
-    public string Name;
-    public string? MemberName;
-    public DeviceTarget Target;
-    public INodeExpression? TargetIndexExpr;
-    public INodeExpression ValueExpression;
+    public readonly string Name;
+    public readonly string? MemberName;
+    public readonly DeviceTarget Target;
+    public readonly INodeExpression? TargetIndexExpr;
+    public readonly INodeExpression ValueExpression;
 
     public override int IndexSize => 2;
 

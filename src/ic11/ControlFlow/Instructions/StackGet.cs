@@ -4,9 +4,9 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class StackGet : Instruction
 {
-    string Device;
-    public Variable Destination;
-    public IExpression AddressExpression;
+    public readonly string Device;
+    public readonly Variable Destination;
+    public readonly IExpression AddressExpression;
 
     public StackGet(string device, Variable destination, IExpression addressExpression)
     {

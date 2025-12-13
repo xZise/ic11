@@ -5,10 +5,10 @@ using ic11.ControlFlow.TreeProcessing;
 namespace ic11.ControlFlow.Nodes;
 public class TernaryOperation : Node, INodeExpression, IExpressionContainer
 {
-    public INodeExpression OperandA;
-    public INodeExpression OperandB;
-    public INodeExpression OperandC;
-    public string Operation;
+    public readonly INodeExpression OperandA;
+    public readonly INodeExpression OperandB;
+    public readonly INodeExpression OperandC;
+    public readonly string Operation;
     public Variable? Variable { get; set; }
 
     public decimal? CtKnownValue

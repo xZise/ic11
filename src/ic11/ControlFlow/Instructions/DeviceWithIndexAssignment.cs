@@ -4,12 +4,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class DeviceWithIndexAssignment : Instruction
 {
-    public IExpression DeviceIndexExpr;
-    public DeviceIndexType IndexType;
-    public IExpression? TargetIndexExpr;
-    public DeviceTarget Target;
-    public string? MemberName;
-    public IExpression ValueExpr;
+    public readonly IExpression DeviceIndexExpr;
+    public readonly DeviceIndexType IndexType;
+    public readonly IExpression? TargetIndexExpr;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
+    public readonly IExpression ValueExpr;
 
     public DeviceWithIndexAssignment(IExpression deviceIndexExpr, DeviceIndexType indexType, string memberName, IExpression expression)
     {

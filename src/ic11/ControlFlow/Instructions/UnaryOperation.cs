@@ -4,9 +4,9 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class UnaryOperation : Instruction
 {
-    public Variable Destination;
-    public IExpression Operand;
-    public string Operation;
+    public readonly Variable Destination;
+    public readonly IExpression Operand;
+    public readonly string Operation;
 
     public UnaryOperation(Variable destination, IExpression operand, string operation)
     {

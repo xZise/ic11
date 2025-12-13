@@ -4,11 +4,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class TernaryOperation : Instruction
 {
-    public Variable Destination;
-    public IExpression OperandA;
-    public IExpression OperandB;
-    public IExpression OperandC;
-    string Operation;
+    public readonly Variable Destination;
+    public readonly IExpression OperandA;
+    public readonly IExpression OperandB;
+    public readonly IExpression OperandC;
+    public readonly string Operation;
 
     public TernaryOperation(Variable destination, IExpression operandA, IExpression operandB, IExpression operandC, string operation)
     {

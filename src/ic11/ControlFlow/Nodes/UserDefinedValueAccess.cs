@@ -4,7 +4,7 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class UserDefinedValueAccess : Node, INodeExpression
 {
-    public string Name;
+    public readonly string Name;
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue { get; set; }
 

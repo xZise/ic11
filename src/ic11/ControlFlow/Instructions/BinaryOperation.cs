@@ -4,10 +4,10 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class BinaryOperation : Instruction
 {
-    public Variable Destination;
-    public IExpression Left;
-    public IExpression Right;
-    string Operation;
+    public readonly Variable Destination;
+    public readonly IExpression Left;
+    public readonly IExpression Right;
+    public readonly string Operation;
 
     public BinaryOperation(Variable destination, IExpression left, IExpression right, string operation)
     {

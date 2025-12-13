@@ -4,12 +4,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class BatchAssignment : Node, IStatement, IExpressionContainer
 {
-    public INodeExpression DeviceTypeHashExpr;
-    public INodeExpression? NameHashExpr;
-    public INodeExpression? TargetIndexExpr;
-    public INodeExpression ValueExpr;
-    public DeviceTarget Target;
-    public string MemberName;
+    public readonly INodeExpression DeviceTypeHashExpr;
+    public readonly INodeExpression? NameHashExpr;
+    public readonly INodeExpression? TargetIndexExpr;
+    public readonly INodeExpression ValueExpr;
+    public readonly DeviceTarget Target;
+    public readonly string MemberName;
     public override int IndexSize => 2;
 
     public BatchAssignment(INodeExpression deviceTypeHashExpr, INodeExpression? nameHashExpr, INodeExpression? targetIndexExpression,

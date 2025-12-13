@@ -5,8 +5,8 @@ using ic11.ControlFlow.TreeProcessing;
 namespace ic11.ControlFlow.Nodes;
 public class UnaryOperation : Node, INodeExpression, IExpressionContainer
 {
-    public INodeExpression Operand;
-    public string Operation;
+    public readonly INodeExpression Operand;
+    public readonly string Operation;
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue
     {

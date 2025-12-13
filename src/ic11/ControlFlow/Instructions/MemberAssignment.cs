@@ -4,11 +4,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class MemberAssignment : Instruction
 {
-    public string Device;
-    public DeviceTarget Target;
-    public string? MemberName;
-    public IExpression? TargetIndexExpr;
-    public IExpression ValueExpr;
+    public readonly string Device;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
+    public readonly IExpression? TargetIndexExpr;
+    public readonly IExpression ValueExpr;
 
     public MemberAssignment(string device, string memberName, IExpression valueExpr)
     {

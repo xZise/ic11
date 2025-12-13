@@ -5,12 +5,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class BatchAccess : Node, INodeExpression, IExpressionContainer
 {
-    public INodeExpression DeviceTypeHashExpr;
-    public INodeExpression? NameHashExpr;
-    public INodeExpression? TargetIndexExpr;
-    public DeviceTarget Target;
-    public string MemberName;
-    public string BatchMode;
+    public readonly INodeExpression DeviceTypeHashExpr;
+    public readonly INodeExpression? NameHashExpr;
+    public readonly INodeExpression? TargetIndexExpr;
+    public readonly DeviceTarget Target;
+    public readonly string MemberName;
+    public readonly string BatchMode;
 
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue => null;

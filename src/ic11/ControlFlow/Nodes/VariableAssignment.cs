@@ -4,8 +4,8 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class VariableAssignment : Node, IStatement, IExpressionContainer
 {
-    public string Name;
-    public INodeExpression Expression;
+    public readonly string Name;
+    public readonly INodeExpression Expression;
     public Variable? Variable;
 
     public VariableAssignment(string name, INodeExpression expression)

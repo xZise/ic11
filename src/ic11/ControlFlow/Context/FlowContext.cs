@@ -6,10 +6,10 @@ public class FlowContext
 {
     public readonly Root Root;
     public INode CurrentNode;
-    public Dictionary<string, MethodDeclaration> DeclaredMethods = new();
-    public List<IStatement>? CurrentStatementList;
-    public List<UserDefinedVariable> AllUserDefinedVariables = new();
-    public List<UserDefinedConstant> AllUserDefinedConstants = new();
+    public readonly Dictionary<string, MethodDeclaration> DeclaredMethods = new();
+    public readonly List<IStatement> CurrentStatementList;
+    public readonly List<UserDefinedVariable> AllUserDefinedVariables = new();
+    public readonly List<UserDefinedConstant> AllUserDefinedConstants = new();
 
     public FlowContext()
     {

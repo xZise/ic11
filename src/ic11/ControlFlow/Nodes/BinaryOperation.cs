@@ -5,9 +5,9 @@ using ic11.ControlFlow.TreeProcessing;
 namespace ic11.ControlFlow.Nodes;
 public class BinaryOperation : Node, INodeExpression, IExpressionContainer
 {
-    public INodeExpression Left;
-    public INodeExpression Right;
-    public string Operation;
+    public readonly INodeExpression Left;
+    public readonly INodeExpression Right;
+    public readonly string Operation;
     public Variable? Variable { get; set; }
 
     public decimal? CtKnownValue

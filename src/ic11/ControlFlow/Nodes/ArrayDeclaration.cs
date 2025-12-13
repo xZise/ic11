@@ -5,12 +5,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class ArrayDeclaration : Node, IStatement, IExpressionContainer
 {
-    public string Name;
-    public INodeExpression SizeExpression;
+    public readonly string Name;
+    public readonly INodeExpression SizeExpression;
     public Variable? AddressVariable;
-    public ArrayDeclarationType DeclarationType;
+    public readonly ArrayDeclarationType DeclarationType;
 
-    public List<INodeExpression>? InitialElementExpressions;
+    public readonly List<INodeExpression>? InitialElementExpressions;
 
     public ArrayDeclaration(string name, INodeExpression sizeExpression)
     {

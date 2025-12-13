@@ -4,9 +4,9 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class If : Node, IStatement, IStatementsContainer, IExpressionContainer
 {
-    public INodeExpression Expression;
-    public List<IStatement> IfStatements = new();
-    public List<IStatement> ElseStatements = new();
+    public readonly INodeExpression Expression;
+    public readonly List<IStatement> IfStatements = new();
+    public readonly List<IStatement> ElseStatements = new();
 
     public IfStatementsContainer CurrentStatementsContainer = IfStatementsContainer.If;
 

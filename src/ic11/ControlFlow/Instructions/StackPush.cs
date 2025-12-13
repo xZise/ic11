@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Instructions;
 public class StackPush : Instruction
 {
-    public IExpression? Expression;
-    public string? Register;
+    public readonly IExpression? Expression;
+    public readonly string? Register;
 
     public StackPush(IExpression expression)
     {

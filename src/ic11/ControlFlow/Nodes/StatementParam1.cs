@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Nodes;
 public class StatementParam1 : Node, IStatement, IExpressionContainer
 {
-    public string Operation;
-    public INodeExpression Parameter;
+    public readonly string Operation;
+    public readonly INodeExpression Parameter;
 
     public IEnumerable<INodeExpression> Expressions
     {

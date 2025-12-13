@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Instructions;
 public class NullaryOperation : Instruction
 {
-    public Variable Destination;
-    public string Operation;
+    public readonly Variable Destination;
+    public readonly string Operation;
 
     public NullaryOperation(Variable destination, string operation)
     {

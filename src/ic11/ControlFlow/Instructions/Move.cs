@@ -4,9 +4,9 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class Move : Instruction
 {
-    public Variable? Destination;
-    public string? Register;
-    public IExpression Expression;
+    public readonly Variable? Destination;
+    public readonly string? Register;
+    public readonly IExpression Expression;
 
     public Move(Variable destination, IExpression expression)
     {

@@ -3,8 +3,8 @@
 namespace ic11.ControlFlow.Nodes;
 public class PinDeclaration : Node, IStatement
 {
-    public string Name;
-    public string Device;
+    public readonly string Name;
+    public readonly string Device;
 
     public PinDeclaration(string name, string device)
     {

@@ -4,9 +4,9 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class ArrayAssignment : Node, IStatement, IExpressionContainer
 {
-    public string Name;
-    public INodeExpression IndexExpression;
-    public INodeExpression ValueExpression;
+    public readonly string Name;
+    public readonly INodeExpression IndexExpression;
+    public readonly INodeExpression ValueExpression;
     public Variable? Variable;
     public UserDefinedVariable? ArrayAddressVariable;
 

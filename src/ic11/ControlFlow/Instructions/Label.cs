@@ -1,7 +1,7 @@
 ﻿namespace ic11.ControlFlow.Instructions;
 public class Label : Instruction
 {
-    public string Name;
+    public readonly string Name;
 
     public Label(string name)
     {

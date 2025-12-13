@@ -5,11 +5,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class DeviceWithIndexAccess : Node, INodeExpression, IExpressionContainer
 {
-    public INodeExpression DeviceIndexExpr;
-    public DeviceIndexType IndexType;
-    public INodeExpression? TargetIndexExpr;
-    public DeviceTarget Target;
-    public string? MemberName;
+    public readonly INodeExpression DeviceIndexExpr;
+    public readonly DeviceIndexType IndexType;
+    public readonly INodeExpression? TargetIndexExpr;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
 
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue => null;

@@ -3,7 +3,7 @@
 namespace ic11.ControlFlow.Nodes;
 public class While : Node, IStatement, IStatementsContainer, IExpressionContainer
 {
-    public INodeExpression Expression;
+    public readonly INodeExpression Expression;
     public List<IStatement> Statements { get; set; } = new();
 
     public While(INodeExpression expression)

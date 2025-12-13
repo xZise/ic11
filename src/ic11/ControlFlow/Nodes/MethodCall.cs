@@ -4,7 +4,7 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class MethodCall : Node, IStatement, INodeExpression, IExpressionContainer
 {
-    public string Name;
+    public readonly string Name;
     public MethodDeclaration? Method;
     public readonly List<INodeExpression> ArgumentExpressions;
     public Variable? Variable { get; set; }

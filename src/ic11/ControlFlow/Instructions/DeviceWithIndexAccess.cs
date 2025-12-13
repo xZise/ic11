@@ -5,12 +5,12 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class DeviceWithIndexAccess : Instruction
 {
-    public Variable Destination;
-    public IExpression DeviceIndexExpr;
-    public DeviceIndexType IndexType;
-    public IExpression? TargetIndexExpr;
-    public DeviceTarget Target;
-    public string? MemberName;
+    public readonly Variable Destination;
+    public readonly IExpression DeviceIndexExpr;
+    public readonly DeviceIndexType IndexType;
+    public readonly IExpression? TargetIndexExpr;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
 
     public DeviceWithIndexAccess(Variable destination, IExpression deviceIndexExpr, DeviceIndexType indexType, string memberName)
     {

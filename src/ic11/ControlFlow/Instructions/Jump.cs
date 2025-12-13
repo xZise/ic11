@@ -4,10 +4,10 @@ using System.Text;
 namespace ic11.ControlFlow.Instructions;
 public class Jump : Instruction
 {
-    public JumpType Type;
+    public readonly JumpType Type;
     public string Destination;
-    public string? Argument1;
-    public string? Argument2;
+    public readonly string? Argument1;
+    public readonly string? Argument2;
 
     public Jump(JumpType type, string destination, string? argument1 = null, string? argument2 = null)
     {

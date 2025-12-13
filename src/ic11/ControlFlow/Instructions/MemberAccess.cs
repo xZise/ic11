@@ -5,11 +5,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Instructions;
 public class MemberAccess : Instruction
 {
-    public Variable Destination;
-    public string Device;
-    public IExpression? TargetIndexExpr;
-    public DeviceTarget Target;
-    public string? MemberName;
+    public readonly Variable Destination;
+    public readonly string Device;
+    public readonly IExpression? TargetIndexExpr;
+    public readonly DeviceTarget Target;
+    public readonly string? MemberName;
 
     public MemberAccess(Variable destination, string device, string member)
     {
