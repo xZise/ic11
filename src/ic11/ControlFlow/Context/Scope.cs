@@ -38,9 +38,7 @@ public class Scope
 
     public Variable ClaimNewVariable(int declareIndex)
     {
-        var newVar = new Variable();
-        newVar.DeclareScope = this;
-        newVar.DeclareIndex = declareIndex;
+        var newVar = new Variable(this, declareIndex);
         AddVariable(newVar);
 
         return newVar;

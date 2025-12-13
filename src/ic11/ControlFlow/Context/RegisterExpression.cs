@@ -9,7 +9,7 @@ public class DirectExpression : IExpression
 
     public DirectExpression(string register)
     {
-        Variable = new Variable { Register = register };
+        Variable = new Variable(register);
     }
 
     public DirectExpression(Variable variable)

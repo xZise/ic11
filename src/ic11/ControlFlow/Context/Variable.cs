@@ -5,8 +5,8 @@ public class Variable
 
     private static int _staticId = 0;
 
-    public Scope DeclareScope;
-    public int DeclareIndex;
+    public readonly Scope? DeclareScope;
+    public readonly int DeclareIndex;
 
     public int LastReassignedIndex = -1;
 
@@ -25,6 +25,17 @@ public class Variable
 
     //private string _reg;
     //public string Register { get => _reg is null ? null : $"var{Id}[{_reg}] dec[{DeclareIndex}] ref[{LastReferencedIndex}]"; set { _reg = value; } }
+
+    public Variable(Scope declareScope, int declareIndex)
+    {
+        DeclareScope = declareScope;
+        DeclareIndex = declareIndex;
+    }
+
+    public Variable(string register)
+    {
+        Register = register;
+    }
 
     public override bool Equals(object? other) =>
         other is Variable otherV && otherV.Id == Id;
