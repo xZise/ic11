@@ -7,6 +7,7 @@ public class FlowContext
 {
     public readonly Root Root;
     public INode CurrentNode;
+    public readonly Dictionary<string, SourceLocation> IncludedFiles = new();
     public readonly Dictionary<string, MethodDeclaration> DeclaredMethods = new();
     public readonly List<IStatement> CurrentStatementList;
     public readonly List<UserDefinedVariable> AllUserDefinedVariables = new();
@@ -19,5 +20,22 @@ public class FlowContext
         CurrentNode = root;
         Root = root;
         CurrentStatementList = root.Statements;
+    }
+
+    public void Include(FlowContext other)
+    {
+        foreach (IStatement statement in other.CurrentStatementList)
+        {
+            switch (statement)
+            {
+                case MethodDeclaration:
+                case ConstantDeclaration:
+                    CurrentStatementList.Add(statement);
+                    break;
+                default:
+                    throw new Exception($"Invalid statement {statement} in included source");
+            }
+        }
+        CompilerMessages.AddRange(other.CompilerMessages);
     }
 }

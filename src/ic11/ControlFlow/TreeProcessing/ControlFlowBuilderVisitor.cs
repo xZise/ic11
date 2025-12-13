@@ -48,6 +48,22 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         return null;
     }
 
+    public override INodeExpression? VisitInclude([NotNull] IncludeContext context)
+    {
+        var filename = context.HASH_LITERAL().GetText().Trim('"');
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+
+        if (CurrentNode is not Root)
+            throw new CompilerMessageException("Include declaration must be top level statement", sourceLocation);
+        
+        if (FlowContext.IncludedFiles.TryGetValue(filename, out var location))
+            FlowContext.CompilerMessages.Add(new($"Include declaration already in {location}", sourceLocation, Severity.Warning));
+        else
+            FlowContext.IncludedFiles[filename] = sourceLocation;
+
+        return null;
+    }
+
     public override INodeExpression? VisitFunction([NotNull] FunctionContext context)
     {
         var identifiers = context.IDENTIFIER();

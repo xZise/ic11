@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Antlr4.Runtime;
 using ic11.ControlFlow.Context;
+using ic11.ControlFlow.Including;
 using ic11.ControlFlow.InstructionsProcessing;
 using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.Nodes;
@@ -62,7 +63,7 @@ public class Program
     private static void CompileFile(string path, bool shouldSave)
     {
         var input = File.ReadAllText(path);
-        var compilationResult = CompileText(input, path);
+        var compilationResult = CompileText(input, path, RelativeHandler.Create(Path.GetDirectoryName(Path.GetFullPath(path))!));
         bool hasErrors = false;
         foreach (var error in compilationResult.CompilerMessages.OrderBy(m => m.Severity).ThenBy(m => (m.SourceLocation.LineNumber, m.SourceLocation.Column)))
         {
@@ -91,25 +92,14 @@ public class Program
         }
     }
 
-    public static (string Instructions, List<CompilerMessage> CompilerMessages) CompileText(string input, string filename)
+    public static (string Instructions, List<CompilerMessage> CompilerMessages) CompileText(string input, string filename, IIncludeHandler includeHandler)
     {
-        Ic11InputStream inputStream = new Ic11InputStream(input, filename);
-        Ic11Lexer lexer = new Ic11Lexer(inputStream);
-        CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
-        Ic11Parser parser = new Ic11Parser(commonTokenStream);
+        var flowContext = ParseText(input, filename, includeHandler);
 
-        var tree = parser.program(); // Assuming 'program' is the entry point of your grammar
-
-        var flowContext = new FlowContext(filename);
-        var flowAnalyzer = new ControlFlowBuilderVisitor(flowContext);
-        flowAnalyzer.Visit(tree);
-
-        new RootStatementsSorter().SortStatements(flowContext.Root);
-        new MethodsVisitor(flowContext).Visit(flowContext.Root);
-        new MethodCallsVisitor(flowContext).VisitRoot(flowContext.Root);
-        new ScopeVisitor(flowContext).Visit(flowContext.Root);
-        new VariableVisitor(flowContext).Visit(flowContext.Root);
-        new VariableCyclesAdjVisitor().VisitRoot(flowContext.Root);
+        if (!flowContext.DeclaredMethods.ContainsKey("Main"))
+        {
+            flowContext.CompilerMessages.Add(new($"Missing method 'void Main()'", new(filename, 0, 1)));
+        }
         new MethodCallGraphVisitor(flowContext).VisitRoot(flowContext.Root);
         new RegisterVisitor(flowContext).DoWork();
         new MethodsRegisterRangesDistributor(flowContext).DoWork();
@@ -128,6 +118,46 @@ public class Program
             output.AppendLine(item.Render());
 
         return (output.ToString(), flowContext.CompilerMessages);
+    }
+
+    private static FlowContext ParseText(string input, string filename, IIncludeHandler includeHandler)
+    {
+        Ic11InputStream inputStream = new(input, filename);
+        Ic11Lexer lexer = new Ic11Lexer(inputStream);
+        CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
+        Ic11Parser parser = new Ic11Parser(commonTokenStream);
+
+        var tree = parser.program(); // Assuming 'program' is the entry point of your grammar
+
+        var flowContext = new FlowContext(filename);
+        var flowAnalyzer = new ControlFlowBuilderVisitor(flowContext);
+        flowAnalyzer.Visit(tree);
+
+        foreach ((var includedFile, var sourceLocation) in flowContext.IncludedFiles)
+        {
+            IncludeResult result = includeHandler.ReadIncludedFile(includedFile);
+            if (result.Result == IncludeResult.Results.NotFound)
+            {
+                flowContext.CompilerMessages.Add(new($"Cannot find included file {includedFile}", sourceLocation));
+            }
+            else
+            {
+                result.Found((contents, handler) =>
+                {
+                    var includedContext = ParseText(contents, includedFile, handler);
+                    flowContext.Include(includedContext);
+                });
+            }
+        }
+
+        new RootStatementsSorter().SortStatements(flowContext.Root);
+        new MethodsVisitor(flowContext).Visit(flowContext.Root);
+        new MethodCallsVisitor(flowContext).VisitRoot(flowContext.Root);
+        new ScopeVisitor(flowContext).Visit(flowContext.Root);
+        new VariableVisitor(flowContext).Visit(flowContext.Root);
+        new VariableCyclesAdjVisitor().VisitRoot(flowContext.Root);
+
+        return flowContext;
     }
 
     private enum PathType

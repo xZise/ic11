@@ -5,7 +5,9 @@ options {
 }
 
 // Parser rules
-program: (declaration | ( constantDeclaration ';') | function)* EOF;
+program: include* (declaration | ( constantDeclaration ';') | function)* EOF;
+
+include: '#include ' HASH_LITERAL;
 
 declaration: 'pin' IDENTIFIER PINID ';';
 

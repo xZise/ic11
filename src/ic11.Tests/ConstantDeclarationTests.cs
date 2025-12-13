@@ -1,5 +1,6 @@
 namespace ic11.Tests;
 
+using ic11.ControlFlow.Including;
 using ic11.Tests.Utils;
 
 [TestClass]
@@ -102,7 +103,7 @@ public sealed class ConstantDeclarationTests
             void Main() {}
         ";
 
-        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11");
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11", NoIncludeHandler.Instance);
         Assert.AreEqual(0, Instructions.Length);
         Assert.AreEqual(1, CompilerMessages.Count);
     }
@@ -116,7 +117,7 @@ public sealed class ConstantDeclarationTests
             void Main() {}
         ";
 
-        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11");
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11", NoIncludeHandler.Instance);
         Assert.AreEqual(0, Instructions.Length);
         Assert.AreEqual(1, CompilerMessages.Count);
     }

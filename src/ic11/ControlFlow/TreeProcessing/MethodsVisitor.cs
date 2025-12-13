@@ -31,9 +31,6 @@ public class MethodsVisitor : ControlFlowContextTreeVisitorBase<bool>
                 _flowContext.CompilerMessages.Add(ex.Error(method.SourceLocation));
             }
         }
-
-        if (!_flowContext.DeclaredMethods.ContainsKey("Main"))
-            throw new CompilerMessageException($"Missing method 'void Main()'", root.SourceLocation);
     }
 
     private bool Visit(Return node)

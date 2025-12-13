@@ -38,6 +38,12 @@ public interface IIc11Visitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitProgram([NotNull] Ic11Parser.ProgramContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="Ic11Parser.include"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInclude([NotNull] Ic11Parser.IncludeContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="Ic11Parser.declaration"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

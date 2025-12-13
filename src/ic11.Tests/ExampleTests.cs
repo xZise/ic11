@@ -1,5 +1,7 @@
 namespace ic11.Tests;
 
+using ic11.ControlFlow.Including;
+
 [TestClass]
 public class ExampleTests
 {
@@ -18,7 +20,7 @@ public class ExampleTests
         }
 
         string code = File.ReadAllText(filename);
-        (var Instructions, var CompilerMessages) = Program.CompileText(code, filename);
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, filename, NoIncludeHandler.Instance);
 
         Assert.IsFalse(CompilerMessages.Any(m => m.Severity == ControlFlow.Messages.Severity.Error));
         Assert.AreNotEqual(0, Instructions.Length);

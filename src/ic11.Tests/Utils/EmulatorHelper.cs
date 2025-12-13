@@ -1,12 +1,13 @@
 namespace ic11.Tests.Utils;
 
+using ic11.ControlFlow.Including;
 using ic11.Emulator;
 
 public static class EmulatorHelper
 {
-    public static Emulator Create(string code, int cyclesPerTick = 128, string filename = "test.ic11")
+    public static Emulator Create(string code, int cyclesPerTick = 128, string filename = "test.ic11", IIncludeHandler? handler = null)
     {
-        var compileText = Program.CompileText(code, filename).Instructions;
+        var compileText = Program.CompileText(code, filename, handler ?? NoIncludeHandler.Instance).Instructions;
         Console.WriteLine(compileText);
 
         var program = compileText.Split("\n");
@@ -16,9 +17,9 @@ public static class EmulatorHelper
         return emulator;
     }
 
-    public static Emulator Run(string code, int cyclesPerTick = 128, string filename = "test.ic11", int maxCycles = 1000)
+    public static Emulator Run(string code, int cyclesPerTick = 128, string filename = "test.ic11", IIncludeHandler? handler = null, int maxCycles = 1000)
     {
-        var emulator = Create(code, cyclesPerTick, filename);
+        var emulator = Create(code, cyclesPerTick, filename, handler);
         Run(emulator, maxCycles);
         return emulator;
     }

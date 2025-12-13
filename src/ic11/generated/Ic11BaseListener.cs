@@ -48,6 +48,18 @@ public partial class Ic11BaseListener : IIc11Listener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitProgram([NotNull] Ic11Parser.ProgramContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="Ic11Parser.include"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterInclude([NotNull] Ic11Parser.IncludeContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="Ic11Parser.include"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitInclude([NotNull] Ic11Parser.IncludeContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="Ic11Parser.declaration"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
