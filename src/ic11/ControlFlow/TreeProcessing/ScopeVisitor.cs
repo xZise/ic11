@@ -7,7 +7,7 @@ using Scope = ic11.ControlFlow.Context.Scope;
 namespace ic11.ControlFlow.TreeProcessing;
 public class ScopeVisitor
 {
-    private Scope _currentScope = new();
+    private Scope _currentScope = null!;
     private readonly FlowContext _flowContext;
 
     public ScopeVisitor(FlowContext flowContext)
@@ -17,9 +17,8 @@ public class ScopeVisitor
 
     public object? Visit(Root node)
     {
-        node.Scope = _currentScope;
-
-        VisitStatementList(((IStatementsContainer)node).Statements);
+        _currentScope = node.Scope;
+        VisitStatementList(node.Statements);
 
         return default!;
     }
@@ -54,15 +53,13 @@ public class ScopeVisitor
             foreach (var item in ec.Expressions)
                 VisitExpression(item);
 
-        var node = statement;
-        node.Scope = _currentScope;
-        node.SetIndex(ref _currentScope.CurrentNodeOrder);
+        AssignScope(statement);
 
         if (statement is IStatementsContainer st)
         {
             var md = statement as MethodDeclaration;
 
-            _currentScope = _currentScope.CreateChildScope(md);
+            using var _ = new ChildScope(this, md);
 
             if (md is not null)
             {
@@ -71,8 +68,6 @@ public class ScopeVisitor
             }
 
             VisitStatementList(st.Statements);
-            _currentScope.Parent!.CurrentNodeOrder = _currentScope.CurrentNodeOrder;
-            _currentScope = _currentScope.Parent!;
         }
     }
 
@@ -93,8 +88,7 @@ public class ScopeVisitor
 
     protected object? Visit(If node)
     {
-        node.Scope = _currentScope;
-        node.SetIndex(ref _currentScope.CurrentNodeOrder);
+        AssignScope(node);
 
         VisitExpression(node.Expression);
 
@@ -102,21 +96,16 @@ public class ScopeVisitor
 
         if (node.Statements.Any())
         {
-            _currentScope = _currentScope.CreateChildScope();
+            using var _ = new ChildScope(this);
             VisitStatementList(node.Statements);
-            _currentScope.Parent!.CurrentNodeOrder = _currentScope.CurrentNodeOrder;
-            _currentScope = _currentScope.Parent!;
         }
 
         node.CurrentStatementsContainer = IfStatementsContainer.Else;
 
         if (node.Statements.Any())
         {
-            _currentScope = _currentScope.CreateChildScope();
+            using var _ = new ChildScope(this);
             VisitStatementList(node.Statements);
-            _currentScope.Parent!.CurrentNodeOrder = _currentScope.CurrentNodeOrder;
-            _currentScope = _currentScope.Parent!;
-
         }
 
         return default!;
@@ -124,10 +113,9 @@ public class ScopeVisitor
 
     protected object? Visit(For node)
     {
-        node.Scope = _currentScope;
-        node.SetIndex(ref _currentScope.CurrentNodeOrder);
+        AssignScope(node);
 
-        _currentScope = _currentScope.CreateChildScope();
+        using var _ = new ChildScope(this);
 
         IEnumerable<IStatement> innerStatements = node.Statements;
 
@@ -141,17 +129,13 @@ public class ScopeVisitor
 
         VisitStatementList(innerStatements);
 
-        _currentScope.Parent!.CurrentNodeOrder = _currentScope.CurrentNodeOrder;
-        _currentScope = _currentScope.Parent!;
-
         return null;
     }
 
     protected object? Visit(ArrayDeclaration node)
     {
         // Array declarations need their expressions only *after* the address is assigned, so the order is reversed
-        node.Scope = _currentScope;
-        node.SetIndex(ref _currentScope.CurrentNodeOrder);
+        AssignScope(node);
 
         foreach (var item in node.Expressions)
             VisitExpression(item);
@@ -167,8 +151,29 @@ public class ScopeVisitor
                 VisitExpression(item);
         }
 
-        var node = expression;
+        AssignScope(expression);
+    }
+
+    private void AssignScope(INode node)
+    {
         node.Scope = _currentScope;
         node.SetIndex(ref _currentScope.CurrentNodeOrder);
+    }
+
+    private ref struct ChildScope: IDisposable
+    {
+        private ScopeVisitor _visitor;
+
+        public ChildScope(ScopeVisitor visitor, MethodDeclaration? method = null)
+        {
+            _visitor = visitor;
+            visitor._currentScope = visitor._currentScope.CreateChildScope(method);
+        }
+
+        public void Dispose()
+        {
+            _visitor._currentScope.Parent!.CurrentNodeOrder = _visitor._currentScope.CurrentNodeOrder;
+            _visitor._currentScope = _visitor._currentScope.Parent!;
+        }
     }
 }
