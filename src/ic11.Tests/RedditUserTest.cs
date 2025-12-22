@@ -134,7 +134,7 @@ public sealed class RedditUserTest
             }
         ";
 
-        var compileText = Program.CompileText(code);
+        var compileText = Program.CompileText(code, "test.ic11").Instructions;
 
         var program = compileText.Split("\n");
         Console.WriteLine(compileText);
@@ -245,7 +245,7 @@ public sealed class RedditUserTest
             }
         ";
 
-        var compileText = Program.CompileText(code);
+        var compileText = Program.CompileText(code, "test.ic11").Instructions;
 
         var program = compileText.Split("\n");
         Console.WriteLine(compileText);

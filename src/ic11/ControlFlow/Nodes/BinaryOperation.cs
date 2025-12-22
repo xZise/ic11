@@ -21,7 +21,7 @@ public class BinaryOperation : Node, INodeExpression, IExpressionContainer
         }
     }
 
-    public BinaryOperation(INodeExpression left, INodeExpression right, string operation)
+    public BinaryOperation(SourceLocation sourceLocation, INodeExpression left, INodeExpression right, string operation): base(sourceLocation)
     {
         Left = left;
         Right = right;

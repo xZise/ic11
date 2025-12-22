@@ -1,5 +1,6 @@
 ﻿using ic11.ControlFlow.Context;
 using ic11.ControlFlow.DataHolders;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 using Scope = ic11.ControlFlow.Context.Scope;
@@ -75,14 +76,21 @@ public class ScopeVisitor
     {
         foreach (var parameter in node.Parameters)
         {
-            var variable = _currentScope!.ClaimNewVariable(-1);
-            variable.IsParameter = true;
-            node.ParameterVariables.Add(variable);
+            try
+            {
+                var variable = _currentScope!.ClaimNewVariable(-1);
+                variable.IsParameter = true;
+                node.ParameterVariables.Add(variable);
 
-            var newUserDefinedVariable = new UserDefinedVariable(parameter, variable!, -1, false);
+                var newUserDefinedVariable = new UserDefinedVariable(parameter.Text, parameter.SourceLocation, variable!, -1, false);
 
-            _currentScope.AddUserVariable(newUserDefinedVariable);
-            _flowContext.AllUserDefinedVariables.Add(newUserDefinedVariable);
+                _currentScope.AddUserVariable(newUserDefinedVariable);
+                _flowContext.AllUserDefinedVariables.Add(newUserDefinedVariable);
+            }
+            catch (CompilerMessageException ex)
+            {
+                _flowContext.CompilerMessages.Add(ex.Error(node.SourceLocation));
+            }
         }
     }
 

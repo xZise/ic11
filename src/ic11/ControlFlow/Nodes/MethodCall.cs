@@ -13,7 +13,7 @@ public class MethodCall : Node, IStatement, INodeExpression, IExpressionContaine
 
     public override int IndexSize => 2;
 
-    public MethodCall(string name, List<INodeExpression> argumentExpressions)
+    public MethodCall(string name, SourceLocation sourceLocation, List<INodeExpression> argumentExpressions): base(sourceLocation)
     {
         Name = name;
         ArgumentExpressions = argumentExpressions;

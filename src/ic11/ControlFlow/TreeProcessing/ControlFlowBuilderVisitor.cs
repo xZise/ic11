@@ -2,6 +2,7 @@
 using Antlr4.Runtime.Tree;
 using ic11.ControlFlow.Context;
 using ic11.ControlFlow.DataHolders;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 using System.Globalization;
@@ -37,10 +38,11 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitDeclaration([NotNull] DeclarationContext context)
     {
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
         if (CurrentNode is not Root root)
-            throw new Exception($"Pin declaration must be top level statement");
+            throw new CompilerMessageException("Pin declaration must be top level statement", sourceLocation);
 
-        var newNode = new PinDeclaration(context.IDENTIFIER().GetText(), context.PINID().GetText());
+        var newNode = new PinDeclaration(context.IDENTIFIER().GetText(), sourceLocation, context.PINID().GetText());
         root.Statements.Add(newNode);
 
         return null;
@@ -52,7 +54,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var name = identifiers[0].GetText();
 
         var parameters = identifiers.Skip(1)
-            .Select(i => i.GetText())
+            .Select(i => new LocatedText(i))
             .ToList();
 
         var block = context.block();
@@ -61,13 +63,14 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         {
             "void" => MethodReturnType.Void,
             "real" => MethodReturnType.Real,
-            _ => throw new Exception($"Unrecognized method return type {context.retType.Text}. Supported: void, real."),
+            _ => throw new CompilerMessageException($"Unrecognized method return type {context.retType.Text}. Supported: void, real.", new SourceLocation(context.retType)),
         };
 
-        var newNode = new MethodDeclaration(name, returnType, parameters);
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+        var newNode = new MethodDeclaration(name, sourceLocation, returnType, parameters);
 
         if (CurrentNode is not Root root)
-            throw new Exception($"Method declaration must be top level statement");
+            throw new CompilerMessageException("Method declaration must be top level statement", sourceLocation);
 
         root.Statements.Add(newNode);
 
@@ -80,7 +83,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitYieldStatement([NotNull] YieldStatementContext context)
     {
-        var newNode = new StatementParam0("yield");
+        var newNode = new StatementParam0(SourceLocation.FromTerminalNode(context.YIELD()), "yield");
         AddToStatements(newNode);
 
         return null;
@@ -88,7 +91,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitHcfStatement([NotNull] HcfStatementContext context)
     {
-        var newNode = new StatementParam0("hcf");
+        var newNode = new StatementParam0(SourceLocation.FromTerminalNode(context.HCF()), "hcf");
         AddToStatements(newNode);
 
         return null;
@@ -101,7 +104,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         if (context.identifier.Type == BASE_DEVICE)
             device = "db";
 
-        var newNode = new StatementParam0($"clr {device}");
+        var newNode = new StatementParam0(SourceLocation.FromRuleContext(context), $"clr {device}");
         AddToStatements(newNode);
 
         return null;
@@ -110,7 +113,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     public override INodeExpression? VisitDeviceWithIdStackClear([NotNull] DeviceWithIdStackClearContext context)
     {
         var expression = Visit(context.deviceIdxExpr)!;
-        var newNode = new StatementParam1("clrd", expression);
+        var newNode = new StatementParam1(SourceLocation.FromRuleContext(context), "clrd", expression);
         AddToStatements(newNode);
 
         return null;
@@ -119,7 +122,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     public override INodeExpression? VisitSleepStatement([NotNull] SleepStatementContext context)
     {
         var expression = Visit(context.expression())!;
-        var newNode = new StatementParam1("sleep", expression);
+        var newNode = new StatementParam1(SourceLocation.FromTerminalNode(context.SLEEP()), "sleep", expression);
         AddToStatements(newNode);
 
         return null;
@@ -127,9 +130,9 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitVariableDeclaration([NotNull] VariableDeclarationContext context)
     {
-        var variableName = context.IDENTIFIER().GetText();
+        var variableName = new LocatedText(context.IDENTIFIER());
         var expression = Visit(context.expression())!;
-        var newNode = new VariableDeclaration(variableName, expression);
+        var newNode = new VariableDeclaration(variableName, SourceLocation.FromRuleContext(context), expression);
 
         AddToStatements(newNode);
 
@@ -138,9 +141,9 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitConstantDeclaration([NotNull] ConstantDeclarationContext context)
     {
-        var constantName = context.IDENTIFIER().GetText();
+        var constantName = new LocatedText(context.IDENTIFIER());
         var expression = Visit(context.expression())!;
-        var newNode = new ConstantDeclaration(constantName, expression);
+        var newNode = new ConstantDeclaration(constantName, SourceLocation.FromTerminalNode(context.IDENTIFIER()), expression);
 
         AddToStatements(newNode);
 
@@ -150,19 +153,28 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     public override INodeExpression VisitLiteral([NotNull] LiteralContext context)
     {
         var value = context.GetText();
+        var sourceLocation = SourceLocation.FromRuleContext(context);
 
-        var number = context.type.Type switch
+        decimal number;
+        try
         {
-            STRING_LITERAL => OperationHelper.ToASCII(value.AsSpan(1..^1)),
-            HASH_LITERAL => OperationHelper.Hash(value.Trim('"')),
-            INTEGER_HEX => OperationHelper.ParseHex(value),
-            INTEGER_BINARY => OperationHelper.ParseBinary(value),
-            _ when value == "true" => 1m,
-            _ when value == "false" => 0m,
-            _ => decimal.Parse(value, CultureInfo.InvariantCulture),
-        };
+            number = context.type.Type switch
+            {
+                STRING_LITERAL => OperationHelper.ToASCII(value.AsSpan(1..^1)),
+                HASH_LITERAL => OperationHelper.Hash(value.Trim('"')),
+                INTEGER_HEX => OperationHelper.ParseHex(value),
+                INTEGER_BINARY => OperationHelper.ParseBinary(value),
+                _ when value == "true" => 1m,
+                _ when value == "false" => 0m,
+                _ => decimal.Parse(value, CultureInfo.InvariantCulture),
+            };
+        }
+        catch (CompilerMessageException ex) when (ex.SourceLocation is null)
+        {
+            throw ex.WithLocation(sourceLocation);
+        }
 
-        return new Literal(number);
+        return new Literal(sourceLocation, number);
     }
 
     private static IParseTree GetTreeFromBlockOrStatement(BlockOrStatementContext ctx)
@@ -178,7 +190,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var expression = Visit(context.expression())!;
 
-        var newNode = new If(expression);
+        var newNode = new If(SourceLocation.FromRuleContext(context), expression);
         AddToStatements(newNode);
 
         CurrentNode = newNode;
@@ -207,7 +219,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         if (context.identifier.Type == BASE_DEVICE)
             device = "db";
 
-        var newNode = new MemberAssignment(device, member, valueExpr);
+        var newNode = new MemberAssignment(device, SourceLocation.FromRuleContext(context), member, valueExpr);
         AddToStatements(newNode);
 
         return null;
@@ -224,7 +236,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         if (context.identifier.Type == BASE_DEVICE)
             device = "db";
 
-        var newNode = new MemberAssignment(device, GetDeviceTarget(context.prop.Type), member, targetIdxExpr, valueExpr);
+        var newNode = new MemberAssignment(device, SourceLocation.FromRuleContext(context), GetDeviceTarget(context.prop.Type), member, targetIdxExpr, valueExpr);
         AddToStatements(newNode);
 
         return null;
@@ -238,7 +250,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         if (context.identifier.Type == BASE_DEVICE)
             device = "db";
 
-        var newNode = new MemberAccess(device, member);
+        var newNode = new MemberAccess(device, SourceLocation.FromRuleContext(context), member);
 
         return newNode;
     }
@@ -255,7 +267,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var target = GetDeviceTarget(context.prop.Type);
 
-        var newNode = new MemberAccess(device, target, targetIdxExpr, member);
+        var newNode = new MemberAccess(device, SourceLocation.FromRuleContext(context), target, targetIdxExpr, member);
 
         return newNode;
     }
@@ -279,7 +291,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
             ? DeviceTarget.Device
             : GetDeviceTarget(context.prop.Type);
 
-        var newNode = new BatchAccess(typeHash, nameHash, targetIdx, target, deviceProperty, batchMode);
+        var newNode = new BatchAccess(SourceLocation.FromRuleContext(context), typeHash, nameHash, targetIdx, target, deviceProperty, batchMode);
 
         return newNode;
     }
@@ -289,7 +301,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var innerCode = GetTreeFromBlockOrStatement(context.blockOrStatement());
         var expression = Visit(context.expression())!;
 
-        var newNode = new While(expression);
+        var newNode = new While(SourceLocation.FromRuleContext(context), expression);
         AddToStatements(newNode);
         CurrentNode = newNode;
         Visit(innerCode);
@@ -300,7 +312,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitForStatement([NotNull] ForStatementContext context)
     {
-        var newNode = new For();
+        var newNode = new For(SourceLocation.FromRuleContext(context));
         AddToStatements(newNode);
 
         CurrentNode = newNode;
@@ -320,7 +332,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         }
         else
         {
-            newNode.Expression = new Literal(1);
+            newNode.Expression = new Literal(newNode.SourceLocation, 1);
         }
 
         Visit(innerCode);
@@ -341,7 +353,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var expression = Visit(context.expression())!;
         var variableName = context.IDENTIFIER().GetText();
 
-        var newNode = new VariableAssignment(variableName, expression);
+        var newNode = new VariableAssignment(variableName, SourceLocation.FromTerminalNode(context.IDENTIFIER()), expression);
         AddToStatements(newNode);
 
         return null;
@@ -349,14 +361,14 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression VisitNullaryOp([NotNull] NullaryOpContext context)
     {
-        return new NullaryOperation(context.op.Text);
+        return new NullaryOperation(SourceLocation.FromRuleContext(context), context.op.Text);
     }
 
     public override INodeExpression VisitUnaryOp([NotNull] UnaryOpContext context)
     {
         var operand = Visit(context.operand)!;
 
-        var newNode = new UnaryOperation(operand, context.op.Text);
+        var newNode = new UnaryOperation(SourceLocation.FromRuleContext(context), operand, context.op.Text);
         return newNode;
     }
 
@@ -365,7 +377,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var operand1 = Visit(context.left)!;
         var operand2 = Visit(context.right)!;
 
-        var newNode = new BinaryOperation(operand1, operand2, context.op.Text);
+        var newNode = new BinaryOperation(SourceLocation.FromRuleContext(context), operand1, operand2, context.op.Text);
 
         return newNode;
     }
@@ -376,7 +388,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var operandB = Visit(context.b)!;
         var operandC = Visit(context.c)!;
 
-        var newNode = new TernaryOperation(operandA, operandB, operandC, context.op.Text);
+        var newNode = new TernaryOperation(SourceLocation.FromRuleContext(context), operandA, operandB, operandC, context.op.Text);
 
         return newNode;
     }
@@ -385,7 +397,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     {
         var name = context.IDENTIFIER().GetText();
 
-        var newNode = new UserDefinedValueAccess(name);
+        var newNode = new UserDefinedValueAccess(name, SourceLocation.FromTerminalNode(context.IDENTIFIER()));
 
         return newNode;
     }
@@ -397,7 +409,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var deviceProperty = context.member.Text;
 
-        var newNode = new DeviceWithIndexAssignment(deviceIdxExpr, DeviceIndexType.Id, value, deviceProperty);
+        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, value, deviceProperty);
         AddToStatements(newNode);
 
         return null;
@@ -411,7 +423,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var deviceProperty = context.member?.Text;
 
-        var newNode = new DeviceWithIndexAssignment(deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, value,
+        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, value,
             GetDeviceTarget(context.prop.Type), deviceProperty);
 
         AddToStatements(newNode);
@@ -438,8 +450,9 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var target = context.prop is null
             ? DeviceTarget.Device
             : GetDeviceTarget(context.prop.Type);
+        SourceLocation.FromRuleContext(context);
 
-        var newNode = new BatchAssignment(deviceTypeHash, deviceNameHash, targetIdx, value, deviceProperty, target);
+        var newNode = new BatchAssignment(SourceLocation.FromRuleContext(context), deviceTypeHash, deviceNameHash, targetIdx, value, deviceProperty, target);
 
         AddToStatements(newNode);
 
@@ -453,7 +466,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var deviceProperty = context.member.Text;
 
-        var newNode = new DeviceWithIndexAssignment(deviceIdxExpr, DeviceIndexType.Pin, value, deviceProperty);
+        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, value, deviceProperty);
         AddToStatements(newNode);
 
         return null;
@@ -467,7 +480,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var deviceProperty = context.member?.Text;
 
-        var newNode = new DeviceWithIndexAssignment(deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, valueExpr, GetDeviceTarget(context.prop.Type), deviceProperty);
+        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, valueExpr, GetDeviceTarget(context.prop.Type), deviceProperty);
         AddToStatements(newNode);
 
         return null;
@@ -478,7 +491,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var member = context.member.Text;
         var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
 
-        var newNode = new DeviceWithIndexAccess(deviceIdxExpr, DeviceIndexType.Pin, member);
+        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, member);
 
         return newNode;
     }
@@ -489,7 +502,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
         var targetIdxExpr = Visit(context.targetIdxExpr)!;
 
-        var newNode = new DeviceWithIndexAccess(deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
+        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
 
         return newNode;
     }
@@ -500,7 +513,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
         var deviceIdExpr = Visit(context.expression())!;
 
-        var newNode = new DeviceWithIndexAccess(deviceIdExpr, DeviceIndexType.Id, member);
+        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdExpr, DeviceIndexType.Id, member);
 
         return newNode;
     }
@@ -511,14 +524,14 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
         var targetIdxExpr = Visit(context.targetIdxExpr)!;
 
-        var newNode = new DeviceWithIndexAccess(deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
+        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
 
         return newNode;
     }
 
     public override INodeExpression? VisitContinueStatement([NotNull] ContinueStatementContext context)
     {
-        var newNode = new Continue();
+        var newNode = new Continue(SourceLocation.FromRuleContext(context));
         AddToStatements(newNode);
 
         return null;
@@ -526,7 +539,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitBreakStatement([NotNull] BreakStatementContext context)
     {
-        var newNode = new Break();
+        var newNode = new Break(SourceLocation.FromRuleContext(context));
         AddToStatements(newNode);
 
         return null;
@@ -540,7 +553,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
             .Select(e => Visit(e)!)
             .ToList();
 
-        var newNode = new MethodCall(name, paramExpressions);
+        var newNode = new MethodCall(name, SourceLocation.FromTerminalNode(context.IDENTIFIER()), paramExpressions);
 
         return newNode;
     }
@@ -553,7 +566,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
             .Select(e => Visit(e)!)
             .ToList();
 
-        var newNode = new MethodCall(name, paramExpressions);
+        var newNode = new MethodCall(name, SourceLocation.FromTerminalNode(context.IDENTIFIER()), paramExpressions);
         AddToStatements(newNode);
 
         return null;
@@ -561,7 +574,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
 
     public override INodeExpression? VisitReturnStatement([NotNull] ReturnStatementContext context)
     {
-        var newNode = new Return();
+        var newNode = new Return(SourceLocation.FromRuleContext(context));
         AddToStatements(newNode);
 
         return null;
@@ -571,7 +584,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     {
         var expression = Visit(context.expression())!;
 
-        var newNode = new Return(expression);
+        var newNode = new Return(SourceLocation.FromRuleContext(context), expression);
         AddToStatements(newNode);
 
         return null;
@@ -581,7 +594,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     {
         var sizeExpression = Visit(context.sizeExpr)!;
 
-        var newNode = new ArrayDeclaration(context.IDENTIFIER().GetText(), sizeExpression);
+        var newNode = new ArrayDeclaration(context.IDENTIFIER().GetText(), SourceLocation.FromRuleContext(context), sizeExpression);
         AddToStatements(newNode);
 
         return null;
@@ -593,7 +606,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
             .Select(ec => Visit(ec)!)
             .ToList();
 
-        var newNode = new ArrayDeclaration(context.IDENTIFIER().GetText(), elementExpressions);
+        var newNode = new ArrayDeclaration(context.IDENTIFIER().GetText(), SourceLocation.FromRuleContext(context), elementExpressions);
         AddToStatements(newNode);
 
         return null;
@@ -604,7 +617,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         var indexExpr = Visit(context.indexExpr)!;
         var valueExpr = Visit(context.valueExpr)!;
 
-        var newNode = new ArrayAssignment(context.IDENTIFIER().GetText(), indexExpr, valueExpr);
+        var newNode = new ArrayAssignment(context.IDENTIFIER().GetText(), SourceLocation.FromRuleContext(context), indexExpr, valueExpr);
         AddToStatements(newNode);
 
         return null;
@@ -613,7 +626,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
     public override INodeExpression? VisitArrayElementAccess([NotNull] ArrayElementAccessContext context)
     {
         var indexExpr = Visit(context.indexExpr)!;
-        var newNode = new ArrayAccess(context.IDENTIFIER().GetText(), indexExpr);
+        var newNode = new ArrayAccess(context.IDENTIFIER().GetText(), SourceLocation.FromRuleContext(context), indexExpr);
 
         return newNode;
     }

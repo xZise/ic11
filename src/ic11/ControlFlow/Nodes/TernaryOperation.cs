@@ -22,7 +22,7 @@ public class TernaryOperation : Node, INodeExpression, IExpressionContainer
         }
     }
 
-    public TernaryOperation(INodeExpression operandA, INodeExpression operandB, INodeExpression operandC, string operation)
+    public TernaryOperation(SourceLocation sourceLocation, INodeExpression operandA, INodeExpression operandB, INodeExpression operandC, string operation): base(sourceLocation)
     {
         OperandA = operandA;
         OperandB = operandB;

@@ -8,12 +8,13 @@ public class Return : Node, IStatement, IExpressionContainer
     public bool HasValue => Expression != null;
     public INodeExpression? Expression { get; }
 
-    public Return()
+
+    public Return(SourceLocation sourceLocation): base(sourceLocation)
     {
         Expression = null;
     }
 
-    public Return(INodeExpression expression)
+    public Return(SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Expression = expression;
         expression.Parent = this;

@@ -6,7 +6,7 @@ public class While : Node, IStatement, IStatementsContainer, IExpressionContaine
     public readonly INodeExpression Expression;
     public List<IStatement> Statements { get; set; } = new();
 
-    public While(INodeExpression expression)
+    public While(SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Expression = expression;
         expression.Parent = this;

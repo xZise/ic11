@@ -8,7 +8,7 @@ public class NullaryOperation : Node, INodeExpression
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue => null;
 
-    public NullaryOperation(string operation)
+    public NullaryOperation(SourceLocation sourceLocation, string operation): base(sourceLocation)
     {
         Operation = operation ?? throw new ArgumentNullException(nameof(operation));
     }

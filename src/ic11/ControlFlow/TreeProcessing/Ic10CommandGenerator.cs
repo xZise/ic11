@@ -1,22 +1,21 @@
 ﻿using ic11.ControlFlow.Context;
 using ic11.ControlFlow.DataHolders;
 using ic11.ControlFlow.Instructions;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 using System.Globalization;
 
 namespace ic11.ControlFlow.TreeProcessing;
-public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
+public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
 {
     protected override Type VisitorType => typeof(Ic10CommandGenerator);
 
     public readonly List<Instruction> Instructions = new();
-    private readonly FlowContext _flowContext;
     private readonly Stack<(string Continue, string Break)> _loopLabels = new();
 
-    public Ic10CommandGenerator(FlowContext flowContext)
+    public Ic10CommandGenerator(FlowContext flowContext): base(flowContext)
     {
-        _flowContext = flowContext;
     }
 
     public List<Instruction> Visit(Root root)
@@ -53,9 +52,9 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
         }
 
         // Pop parameters
-        foreach(string paramName in node.Parameters)
+        foreach(var paramName in node.Parameters)
         {
-            var variable = node.InnerScope!.UserDefinedVariables[paramName].Variable;
+            var variable = node.InnerScope!.UserDefinedVariables[paramName.Text].Variable;
             Instructions.Add(new StackPop(variable));
         }
 
@@ -64,7 +63,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
 
         // r15 is used to store arrays sizes sum, so if there are arrays, we need to init it with 0
         if (node.ContainsArrays)
-            Instructions.Add(new Move("r15", new Literal(0)));
+            Instructions.Add(new Move("r15", new LiteralExpression(0)));
 
         VisitStatements(node.Statements);
 
@@ -132,7 +131,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
 
     private object? Visit(Return node)
     {
-        var declaredMethod = node.Scope?.Method ?? throw new Exception($"Encountered return outside of a method");
+        var declaredMethod = node.Scope?.Method ?? throw new CompilerMessageException("Encountered return outside of a method", node.SourceLocation);
 
         if (declaredMethod.ReturnType == MethodReturnType.Void)
         {
@@ -141,7 +140,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
         else
         {
             // if return type is void, we do this in the exit part instead
-            if (node.Scope.Method.ContainsArrays)
+            if (declaredMethod.ContainsArrays)
             {
                 var r15Expr = new DirectExpression("r15");
                 var spExpr = new DirectExpression("sp");
@@ -221,6 +220,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
     private object? Visit(Continue node)
     {
         if (!_loopLabels.Any())
+            throw new CompilerMessageException("Continue must be inside a cycle", node.SourceLocation);
 
         Instructions.Add(new Jump(JumpType.J, _loopLabels.Peek().Continue));
 
@@ -230,6 +230,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
     private object? Visit(Break node)
     {
         if (!_loopLabels.Any())
+            throw new CompilerMessageException("Break must be inside a cycle", node.SourceLocation);
 
         Instructions.Add(new Jump(JumpType.J, _loopLabels.Peek().Break));
 
@@ -495,7 +496,7 @@ public class Ic10CommandGenerator : ControlFlowTreeVisitorBase<object?>
             var r15Expr = new DirectExpression("r15");
 
             Instructions.Add(new Move(node.AddressVariable!, spExpr));
-            Instructions.Add(new Instructions.BinaryOperation(r15Expr.Variable!, r15Expr, new Literal(size), "add"));
+            Instructions.Add(new Instructions.BinaryOperation(r15Expr.Variable!, r15Expr, new LiteralExpression(size), "add"));
 
             foreach (var item in node.InitialElementExpressions!)
             {

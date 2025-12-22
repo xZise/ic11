@@ -14,7 +14,7 @@ public class StatementParam1 : Node, IStatement, IExpressionContainer
         }
     }
 
-    public StatementParam1(string operation, INodeExpression parameter)
+    public StatementParam1(SourceLocation sourceLocation, string operation, INodeExpression parameter): base(sourceLocation)
     {
         Operation = operation;
         Parameter = parameter;

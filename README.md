@@ -58,3 +58,4 @@ The following changes are included in here compared to 1.41.0:
 * Cleaning up some parts of the code ([#26](https://github.com/Raibo/ic11/pull/26))
 * Do not crash for unsupported nodes in visualizer
 * On assignment write result of previous node directly into the assigned register
+* Use messages to report compiler errors and warnings instead of throwing exceptions

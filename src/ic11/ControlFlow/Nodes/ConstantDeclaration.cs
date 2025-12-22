@@ -3,10 +3,10 @@
 namespace ic11.ControlFlow.Nodes;
 public class ConstantDeclaration : Node, IStatement, IExpressionContainer
 {
-    public readonly string Name;
+    public readonly LocatedText Name;
     public readonly INodeExpression Expression;
 
-    public ConstantDeclaration(string name, INodeExpression expression)
+    public ConstantDeclaration(LocatedText name, SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Name = name;
         Expression = expression;

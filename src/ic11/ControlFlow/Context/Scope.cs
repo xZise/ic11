@@ -1,3 +1,4 @@
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.Nodes;
 
 namespace ic11.ControlFlow.Context;
@@ -96,7 +97,7 @@ public class Scope
     public void AddUserVariable(UserDefinedVariable variable)
     {
         if (IsNameAlreadyTaken(variable.Name))
-            throw new Exception($"'{variable.Name}' already exists");
+            throw new CompilerMessageException($"'{variable.Name}' already exists", variable.SourceLocation);
 
         UserDefinedVariables[variable.Name] = variable;
 
@@ -110,7 +111,7 @@ public class Scope
     public void AddUserConstant(UserDefinedConstant constant)
     {
         if (IsNameAlreadyTaken(constant.Name))
-            throw new Exception($"'{constant.Name}' already exists");
+            throw new CompilerMessageException($"'{constant.Name}' already exists", constant.SourceLocation);
 
         UserDefinedConstants[constant.Name] = constant;
 

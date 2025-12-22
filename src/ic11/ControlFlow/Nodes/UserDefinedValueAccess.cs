@@ -8,7 +8,7 @@ public class UserDefinedValueAccess : Node, INodeExpression
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue { get; set; }
 
-    public UserDefinedValueAccess(string name)
+    public UserDefinedValueAccess(string name, SourceLocation sourceLocation): base(sourceLocation)
     {
         Name = name;
     }

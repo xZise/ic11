@@ -1,4 +1,5 @@
 using ic11.ControlFlow.Context;
+using ic11.ControlFlow.Nodes;
 
 namespace ic11.ControlFlow.NodeInterfaces;
 
@@ -10,6 +11,7 @@ public interface INode
     int IndexSize { get; }
     int IndexInScope { get; set; }
     bool IsUnreachableCode { get; set; }
+    SourceLocation SourceLocation { get; }
 
     bool Equals(object? obj);
     bool Equals(INode? other);

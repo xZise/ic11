@@ -1,12 +1,12 @@
 ﻿using ic11.ControlFlow.Context;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 
 namespace ic11.ControlFlow.TreeProcessing;
-public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
+public class VariableVisitor : ControlFlowContextTreeVisitorBase<Variable?>
 {
     protected override Type VisitorType => typeof(VariableVisitor);
-    private readonly FlowContext _flowContext;
     private Root _root;
 
     private HashSet<Type> _preciselyTreatedNodes = new()
@@ -24,10 +24,9 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
         typeof(ArrayAccess),
     };
 
-    public VariableVisitor(FlowContext flowContext)
+    public VariableVisitor(FlowContext flowContext): base(flowContext)
     {
         AllowMethodSkip = true;
-        _flowContext = flowContext;
     }
 
     public void Visit(Root node)
@@ -64,8 +63,8 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
             if (ex.CtKnownValue is null)
                 ex.Variable = targetVariable ?? node.Scope!.ClaimNewVariable(node.IndexInScope);
 
-            if (IsVoidCallAsExpression(node))
-                throw new Exception($"Void method used as an expression");
+            if (node is MethodCall mc && IsVoidCallAsExpression(mc))
+                throw new CompilerMessageException($"Void method used as an expression", mc.SourceLocation);
 
             variable = ex.Variable;
         }
@@ -78,11 +77,8 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
 
         return variable;
 
-        bool IsVoidCallAsExpression(INode node)
+        bool IsVoidCallAsExpression(MethodCall mc)
         {
-            if (node is not MethodCall mc)
-                return false;
-
             var isCalledMethodVoid = _flowContext.DeclaredMethods[mc.Name].ReturnType == DataHolders.MethodReturnType.Void;
             var isInExpressionsList = node.Parent is IExpressionContainer ec && ec.Expressions.Any(x => node.Equals(x));
 
@@ -101,7 +97,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
 
         node.Variable = node.Scope!.ClaimNewVariable(node.IndexInScope);
 
-        var newUserDefinedVariable = new UserDefinedVariable(node.Name, node.Variable!, node.IndexInScope, node.Expression.CtKnownValue.HasValue);
+        var newUserDefinedVariable = new UserDefinedVariable(node.Name.Text, node.SourceLocation, node.Variable!, node.IndexInScope, node.Expression.CtKnownValue.HasValue);
 
         scope.AddUserVariable(newUserDefinedVariable);
         _flowContext.AllUserDefinedVariables.Add(newUserDefinedVariable);
@@ -122,7 +118,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
                 return constant;
             }
 
-            throw new Exception($"Constant {node.Name} accesses {innerNode.Name} which has no compile time known value");
+            throw new CompilerMessageException($"Constant {node.Name} accesses {innerNode.Name} which has no compile time known value", node.SourceLocation);
         }
 
         decimal VisitConstantNode(IExpression expression)
@@ -142,14 +138,14 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
                     return expression.CtKnownValue.Value;
             }
 
-            throw new Exception($"Constant {node.Name} must have a compile time known value");
+            throw new CompilerMessageException($"Constant {node.Name} must have a compile time known value", node.SourceLocation);
         }
 
         var constant = VisitConstantNode(node.Expression);
         
         var scope = node.Scope!;
 
-        var newUserDefinedConstant = new UserDefinedConstant(node.Name, constant, node.IndexInScope);
+        var newUserDefinedConstant = new UserDefinedConstant(node.Name.Text, node.SourceLocation, constant, node.IndexInScope);
 
         scope.AddUserConstant(newUserDefinedConstant);
         _flowContext.AllUserDefinedConstants.Add(newUserDefinedConstant);
@@ -160,7 +156,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
     private Variable? Visit(VariableAssignment node)
     {
         if (!node.Scope!.TryGetUserVariable(node.Name, out var targetVariable))
-            throw new Exception($"Variable {node.Name} is not defined");
+            throw new CompilerMessageException($"Variable '{node.Name}' is not defined", node.SourceLocation);
 
         targetVariable.LastReassignedIndex = node.IndexInScope;
         targetVariable.LastReferencedIndex = node.IndexInScope;
@@ -197,22 +193,18 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
             return null;
         }
 
-        throw new Exception($"'{node.Name}' is not defined");
+        throw new CompilerMessageException($"'{node.Name}' is not defined", node.SourceLocation);
     }
 
     private Variable? Visit(PinDeclaration node)
     {
-        if (node is PinDeclaration pin)
-        {
-            if (_root.DevicePinMap.Values.Contains(pin.Device))
-                throw new Exception($"Pin {pin.Device} already defined");
+        if (_root.DevicePinMap.Values.Contains(node.Device))
+            throw new CompilerMessageException($"Pin for {node.Device} already defined", node.SourceLocation);
 
-            if (_root.DevicePinMap.ContainsKey(pin.Name))
-                throw new Exception($"Pin {pin.Name} already defined");
+        if (_root.DevicePinMap.ContainsKey(node.Name))
+            throw new CompilerMessageException($"Pin {node.Name} already defined", node.SourceLocation);
 
-            _root.DevicePinMap[pin.Name] = pin.Device;
-        }
-
+        _root.DevicePinMap[node.Name] = node.Device;
         return null;
     }
 
@@ -272,7 +264,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
     {
         node.AddressVariable = node.Scope!.ClaimNewVariable(node.IndexInScope);
 
-        var newUserArray = new UserDefinedVariable(node.Name, node.AddressVariable, node.IndexInScope, false);
+        var newUserArray = new UserDefinedVariable(node.Name, node.SourceLocation, node.AddressVariable, node.IndexInScope, false);
         node.Scope!.AddUserVariable(newUserArray);
         _flowContext.AllUserDefinedVariables.Add(newUserArray);
 
@@ -301,7 +293,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
     private Variable? Visit(ArrayAssignment node)
     {
         if (!node.Scope!.TryGetUserVariable(node.Name, out var addressVariable))
-            throw new Exception($"{node.Name} is not defined");
+            throw new CompilerMessageException($"{node.Name} is not defined", node.SourceLocation);
 
         node.ArrayAddressVariable = addressVariable;
         addressVariable.LastReferencedIndex = node.IndexInScope;
@@ -326,7 +318,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
     private Variable? Visit(ArrayAccess node)
     {
         if (!node.Scope!.TryGetUserVariable(node.Name, out var addressVariable))
-            throw new Exception($"Array '{node.Name}' is not defined");
+            throw new CompilerMessageException($"Array '{node.Name}' is not defined", node.SourceLocation);
 
         node.ArrayAddressVariable = addressVariable;
         addressVariable.LastReferencedIndex = node.IndexInScope;

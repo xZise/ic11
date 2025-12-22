@@ -12,7 +12,7 @@ public class DeviceWithIndexAssignment : Node, IStatement, IExpressionContainer
     public readonly string? MemberName;
     public override int IndexSize => 2;
 
-    public DeviceWithIndexAssignment(INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression valueExpr, string memberName)
+    public DeviceWithIndexAssignment(SourceLocation sourceLocation, INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression valueExpr, string memberName): base(sourceLocation)
     {
         DeviceIndexExpr = deviceIndexExpr;
         IndexType = indexType;
@@ -24,8 +24,8 @@ public class DeviceWithIndexAssignment : Node, IStatement, IExpressionContainer
         Validate();
     }
 
-    public DeviceWithIndexAssignment(INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression slotIndexExpr, INodeExpression valueExpr,
-        DeviceTarget target, string? memberName)
+    public DeviceWithIndexAssignment(SourceLocation sourceLocation, INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression slotIndexExpr, INodeExpression valueExpr,
+        DeviceTarget target, string? memberName): base(sourceLocation)
     {
         DeviceIndexExpr = deviceIndexExpr;
         IndexType = indexType;

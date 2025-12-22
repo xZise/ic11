@@ -1,5 +1,6 @@
 ﻿using System.IO.Hashing;
 using System.Text;
+using ic11.ControlFlow.Messages;
 
 namespace ic11.ControlFlow.TreeProcessing;
 public static class OperationHelper
@@ -65,7 +66,7 @@ public static class OperationHelper
                 i++;
                 
                 if (i >= input.Length)
-                    throw new InvalidOperationException("Escape character at end of string");
+                    throw new CompilerMessageException("Escape character at end of string", null);
 
                 c = input[i];
             }
@@ -73,10 +74,10 @@ public static class OperationHelper
             chars++;
             
             if (chars > MAX_INT_DOUBLE)
-                throw new InvalidOperationException("String is too long to convert");
+                throw new CompilerMessageException("String is too long to convert", null);
                 
             if (!char.IsAscii(c))
-                throw new InvalidOperationException("String does contain non-ASCII character");
+                throw new CompilerMessageException("String does contain non-ASCII character", null);
             
             result <<= 8;
             result |= (byte)c;

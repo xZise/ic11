@@ -12,7 +12,7 @@ public class MemberAssignment : Node, IStatement, IExpressionContainer
 
     public override int IndexSize => 2;
 
-    public MemberAssignment(string name, string memberName, INodeExpression valueExpression)
+    public MemberAssignment(string name, SourceLocation sourceLocation, string memberName, INodeExpression valueExpression): base(sourceLocation)
     {
         Name = name;
         MemberName = memberName;
@@ -22,7 +22,7 @@ public class MemberAssignment : Node, IStatement, IExpressionContainer
         Validate();
     }
 
-    public MemberAssignment(string name, DeviceTarget target, string? memberName, INodeExpression targetIndexExpr, INodeExpression valueExpression)
+    public MemberAssignment(string name, SourceLocation sourceLocation, DeviceTarget target, string? memberName, INodeExpression targetIndexExpr, INodeExpression valueExpression): base(sourceLocation)
     {
         Name = name;
         MemberName = memberName;

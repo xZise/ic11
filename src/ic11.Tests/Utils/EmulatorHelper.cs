@@ -4,9 +4,9 @@ using ic11.Emulator;
 
 public static class EmulatorHelper
 {
-    public static Emulator Create(string code, int cyclesPerTick = 128)
+    public static Emulator Create(string code, int cyclesPerTick = 128, string filename = "test.ic11")
     {
-        var compileText = Program.CompileText(code);
+        var compileText = Program.CompileText(code, filename).Instructions;
         Console.WriteLine(compileText);
 
         var program = compileText.Split("\n");
@@ -16,9 +16,9 @@ public static class EmulatorHelper
         return emulator;
     }
 
-    public static Emulator Run(string code, int cyclesPerTick = 128, int maxCycles = 1000)
+    public static Emulator Run(string code, int cyclesPerTick = 128, string filename = "test.ic11", int maxCycles = 1000)
     {
-        var emulator = Create(code, cyclesPerTick);
+        var emulator = Create(code, cyclesPerTick, filename);
         Run(emulator, maxCycles);
         return emulator;
     }

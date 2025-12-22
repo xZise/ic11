@@ -1,4 +1,5 @@
 ﻿using ic11.ControlFlow.Context;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 
@@ -20,13 +21,13 @@ public class MethodCallsVisitor
         foreach (var item in _methodCalls)
         {
             if (!_flowContext.DeclaredMethods.TryGetValue(item.Name, out var declaredMethod))
-                throw new Exception($"Method '{item.Name}' is not defined");
+                throw new CompilerMessageException($"Method '{item.Name}' is not defined", item.SourceLocation);
 
             if (item.Name == "Main")
-                throw new Exception($"Don't call Main");
+                throw new CompilerMessageException("Don't call Main", item.SourceLocation);
 
             if (item.ArgumentExpressions.Count != declaredMethod.Parameters.Count)
-                throw new Exception($"Wrong parameter count");
+                throw new CompilerMessageException($"Expected {declaredMethod.Parameters.Count} parameter(s) but called with {item.ArgumentExpressions.Count} parameter(s)", item.SourceLocation);
 
             item.Method = declaredMethod;
         }

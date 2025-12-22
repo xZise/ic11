@@ -16,8 +16,8 @@ public class BatchAccess : Node, INodeExpression, IExpressionContainer
     public decimal? CtKnownValue => null;
     public override int IndexSize => 2;
 
-    public BatchAccess(INodeExpression deviceTypeHashExpr, INodeExpression? nameHashExpr, INodeExpression? targetIndexExpr,
-        DeviceTarget target, string memberName, string batchMode)
+    public BatchAccess(SourceLocation sourceLocation, INodeExpression deviceTypeHashExpr, INodeExpression? nameHashExpr, INodeExpression? targetIndexExpr,
+        DeviceTarget target, string memberName, string batchMode): base(sourceLocation)
     {
         DeviceTypeHashExpr = deviceTypeHashExpr;
         NameHashExpr = nameHashExpr;

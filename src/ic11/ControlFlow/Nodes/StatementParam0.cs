@@ -5,7 +5,7 @@ public class StatementParam0 : Node, IStatement
 {
     public readonly string Operation;
 
-    public StatementParam0(string operation)
+    public StatementParam0(SourceLocation sourceLocation, string operation): base(sourceLocation)
     {
         Operation = operation;
     }

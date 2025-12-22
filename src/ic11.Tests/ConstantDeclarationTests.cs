@@ -102,7 +102,9 @@ public sealed class ConstantDeclarationTests
             void Main() {}
         ";
 
-        Assert.ThrowsException<System.Reflection.TargetInvocationException>(() => Program.CompileText(code));
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11");
+        Assert.AreEqual(0, Instructions.Length);
+        Assert.AreEqual(1, CompilerMessages.Count);
     }
 
     [TestMethod]
@@ -114,6 +116,8 @@ public sealed class ConstantDeclarationTests
             void Main() {}
         ";
 
-        Assert.ThrowsException<System.Reflection.TargetInvocationException>(() => Program.CompileText(code));
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, "test.ic11");
+        Assert.AreEqual(0, Instructions.Length);
+        Assert.AreEqual(1, CompilerMessages.Count);
     }
 }

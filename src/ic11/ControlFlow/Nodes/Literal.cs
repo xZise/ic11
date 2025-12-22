@@ -7,7 +7,7 @@ public class Literal : Node, INodeExpression
     public Variable? Variable { get => null; set { } }
     public decimal? CtKnownValue { get; init; }
 
-    public Literal(decimal value)
+    public Literal(SourceLocation sourceLocation, decimal value): base(sourceLocation)
     {
         CtKnownValue = value;
     }

@@ -15,7 +15,7 @@ public class DeviceWithIndexAccess : Node, INodeExpression, IExpressionContainer
     public decimal? CtKnownValue => null;
     public override int IndexSize => 2;
 
-    public DeviceWithIndexAccess(INodeExpression deviceIndexExpr, DeviceIndexType indexType, string memberName)
+    public DeviceWithIndexAccess(SourceLocation sourceLocation, INodeExpression deviceIndexExpr, DeviceIndexType indexType, string memberName): base(sourceLocation)
     {
         DeviceIndexExpr = deviceIndexExpr;
         deviceIndexExpr.Parent = this;
@@ -25,8 +25,8 @@ public class DeviceWithIndexAccess : Node, INodeExpression, IExpressionContainer
         Validate();
     }
 
-    public DeviceWithIndexAccess(INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression targetIndexExpr,
-        DeviceTarget target, string? memberName)
+    public DeviceWithIndexAccess(SourceLocation sourceLocation, INodeExpression deviceIndexExpr, DeviceIndexType indexType, INodeExpression targetIndexExpr,
+        DeviceTarget target, string? memberName): base(sourceLocation)
     {
         DeviceIndexExpr = deviceIndexExpr;
         TargetIndexExpr = targetIndexExpr;

@@ -7,7 +7,7 @@ public class MethodDeclaration : Node, IStatement, IStatementsContainer
 {
     public readonly string Name;
     public readonly MethodReturnType ReturnType;
-    public readonly List<string> Parameters;
+    public readonly List<LocatedText> Parameters;
     public List<IStatement> Statements { get; init; } = new();
     public List<Variable> ParameterVariables = new();
 
@@ -23,7 +23,7 @@ public class MethodDeclaration : Node, IStatement, IStatementsContainer
     public List<Variable> AllVariables = [];
 
 
-    public MethodDeclaration(string name, MethodReturnType returnType, List<string> parameters)
+    public MethodDeclaration(string name, SourceLocation sourceLocation, MethodReturnType returnType, List<LocatedText> parameters): base(sourceLocation)
     {
         Name = name;
         ReturnType = returnType;

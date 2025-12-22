@@ -13,7 +13,7 @@ public class MemberAccess : Node, INodeExpression, IExpressionContainer
     public Variable? Variable { get; set; }
     public decimal? CtKnownValue => null;
 
-    public MemberAccess(string name, string memberName)
+    public MemberAccess(string name, SourceLocation sourceLocation, string memberName): base(sourceLocation)
     {
         Name = name;
         MemberName = memberName;
@@ -21,7 +21,7 @@ public class MemberAccess : Node, INodeExpression, IExpressionContainer
         Validate();
     }
 
-    public MemberAccess(string name, DeviceTarget target, INodeExpression targetIndexExpr, string? memberName)
+    public MemberAccess(string name, SourceLocation sourceLocation, DeviceTarget target, INodeExpression targetIndexExpr, string? memberName): base(sourceLocation)
     {
         Name = name;
         TargetIndexExpr = targetIndexExpr;

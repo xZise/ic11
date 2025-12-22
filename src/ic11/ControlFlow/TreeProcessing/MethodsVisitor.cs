@@ -1,18 +1,17 @@
 ﻿using ic11.ControlFlow.Context;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 
 namespace ic11.ControlFlow.TreeProcessing;
-public class MethodsVisitor : ControlFlowTreeVisitorBase<bool>
+public class MethodsVisitor : ControlFlowContextTreeVisitorBase<bool>
 {
     protected override Type VisitorType => typeof(MethodsVisitor);
 
-    private readonly FlowContext _flowContext;
     private MethodDeclaration _currentMethod;
 
-    public MethodsVisitor(FlowContext flowContext)
+    public MethodsVisitor(FlowContext flowContext) : base(flowContext)
     {
-        _flowContext = flowContext;
         AllowMethodSkip = true;
         SkippedReturnValue = false;
     }
@@ -22,19 +21,28 @@ public class MethodsVisitor : ControlFlowTreeVisitorBase<bool>
         var methodDeclarations = root.Statements.OfType<MethodDeclaration>();
 
         foreach (MethodDeclaration method in methodDeclarations)
-            Visit(method);
+        {
+            try
+            {
+                Visit(method);
+            }
+            catch (CompilerMessageException ex)
+            {
+                _flowContext.CompilerMessages.Add(ex.Error(method.SourceLocation));
+            }
+        }
 
         if (!_flowContext.DeclaredMethods.ContainsKey("Main"))
-            throw new Exception($"Missing method 'void Main()'");
+            throw new CompilerMessageException($"Missing method 'void Main()'", root.SourceLocation);
     }
 
     private bool Visit(Return node)
     {
         if (_currentMethod.ReturnType == DataHolders.MethodReturnType.Void && node.HasValue)
-            throw new Exception($"Unexpected return value in a void method");
+            throw new CompilerMessageException($"Unexpected return value in a void method", node.SourceLocation);
 
         if (_currentMethod.ReturnType != DataHolders.MethodReturnType.Void && !node.HasValue)
-            throw new Exception($"Return value expected");
+            throw new CompilerMessageException($"Return value expected", node.SourceLocation);
 
         return true;
     }
@@ -63,13 +71,13 @@ public class MethodsVisitor : ControlFlowTreeVisitorBase<bool>
     private void Visit(MethodDeclaration node)
     {
         if (_flowContext.DeclaredMethods.ContainsKey(node.Name))
-            throw new Exception($"Method '{node.Name}' already exists");
+            throw new CompilerMessageException($"Method '{node.Name}' already exists", node.SourceLocation);
 
         if (node.Name == "Main" && node.Parameters.Any())
-            throw new Exception($"Method '{node.Name}' cannot have parameters");
+            throw new CompilerMessageException($"Method '{node.Name}' cannot have parameters", node.SourceLocation);
 
         if (node.Name == "Main" && node.ReturnType != DataHolders.MethodReturnType.Void)
-            throw new Exception($"Method '{node.Name}' cannot return value");
+            throw new CompilerMessageException($"Method '{node.Name}' cannot return value", node.SourceLocation);
 
         _flowContext.DeclaredMethods[node.Name] = node;
         _currentMethod = node;
@@ -77,7 +85,10 @@ public class MethodsVisitor : ControlFlowTreeVisitorBase<bool>
         bool containReturn = ContainReturn(node.Statements);
 
         if (!containReturn && node.ReturnType == DataHolders.MethodReturnType.Real)
+        {
             node.NotAllPathsReturnValue = true;
+            throw new CompilerMessageException("Not all paths return a value", node.SourceLocation);
+        }
     }
 
     private bool Visit(If node)

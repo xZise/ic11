@@ -9,7 +9,7 @@ public class Root : Node, IStatementsContainer
     public List<IStatement> Statements { get; init; } = new();
     public Dictionary<string, string> DevicePinMap = new();
 
-    public Root() : base()
+    public Root(string filename) : base(new(filename, 1, 0))
     {
         base.Scope = new Scope();
     }

@@ -8,6 +8,7 @@ public abstract class Node : INode
     public int Id { get; }
     public Scope? Scope { get; set; }
     public int IndexInScope { get; set; }
+    public SourceLocation SourceLocation { get; }
 
     public virtual int IndexSize => 1;
 
@@ -15,9 +16,10 @@ public abstract class Node : INode
 
     private static int NextNodeId;
 
-    public Node()
+    public Node(SourceLocation sourceLocation)
     {
         Id = NextNodeId++;
+        SourceLocation = sourceLocation;
     }
 
     public void SetIndex(ref int index)

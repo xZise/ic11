@@ -12,7 +12,7 @@ public class ArrayDeclaration : Node, IStatement, IExpressionContainer
 
     public readonly List<INodeExpression>? InitialElementExpressions;
 
-    public ArrayDeclaration(string name, INodeExpression sizeExpression)
+    public ArrayDeclaration(string name, SourceLocation sourceLocation, INodeExpression sizeExpression): base(sourceLocation)
     {
         Name = name;
         SizeExpression = sizeExpression;
@@ -21,10 +21,10 @@ public class ArrayDeclaration : Node, IStatement, IExpressionContainer
         DeclarationType = ArrayDeclarationType.Size;
     }
 
-    public ArrayDeclaration(string name, List<INodeExpression> initialElementExpressions)
+    public ArrayDeclaration(string name, SourceLocation sourceLocation, List<INodeExpression> initialElementExpressions): base(sourceLocation)
     {
         Name = name;
-        SizeExpression = new Literal(initialElementExpressions.Count);
+        SizeExpression = new Literal(sourceLocation, initialElementExpressions.Count);
         InitialElementExpressions = initialElementExpressions;
 
         foreach (var item in initialElementExpressions)

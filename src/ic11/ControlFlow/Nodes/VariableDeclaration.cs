@@ -4,11 +4,11 @@ using ic11.ControlFlow.NodeInterfaces;
 namespace ic11.ControlFlow.Nodes;
 public class VariableDeclaration : Node, IStatement, IExpressionContainer
 {
-    public readonly string Name;
+    public readonly LocatedText Name;
     public readonly INodeExpression Expression;
     public Variable? Variable;
 
-    public VariableDeclaration(string name, INodeExpression expression)
+    public VariableDeclaration(LocatedText name, SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Name = name;
         Expression = expression;

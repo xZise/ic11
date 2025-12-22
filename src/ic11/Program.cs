@@ -2,6 +2,7 @@
 using Antlr4.Runtime;
 using ic11.ControlFlow.Context;
 using ic11.ControlFlow.InstructionsProcessing;
+using ic11.ControlFlow.Messages;
 using ic11.ControlFlow.Nodes;
 using ic11.ControlFlow.TreeProcessing;
 
@@ -61,7 +62,25 @@ public class Program
     private static void CompileFile(string path, bool shouldSave)
     {
         var input = File.ReadAllText(path);
-        var output = CompileText(input);
+        var compilationResult = CompileText(input, path);
+        bool hasErrors = false;
+        foreach (var error in compilationResult.CompilerMessages.OrderBy(m => m.Severity).ThenBy(m => (m.SourceLocation.LineNumber, m.SourceLocation.Column)))
+        {
+            hasErrors |= error.Severity == Severity.Error;
+            Console.Error.WriteLine($"{error.Severity} in {error.SourceLocation}:");
+            Console.Error.WriteLine(error.Message);
+            string? errorCode = error.SourceLocation.ShowErrorCode();
+            if (errorCode != null)
+            {
+                Console.Error.WriteLine(errorCode);
+            }
+        }
+        if (string.IsNullOrEmpty(compilationResult.Instructions) || hasErrors)
+        {
+            return;
+        }
+
+        string output = compilationResult.Instructions;
         Console.WriteLine(output);
 
         if (shouldSave)
@@ -72,16 +91,16 @@ public class Program
         }
     }
 
-    public static string CompileText(string input)
+    public static (string Instructions, List<CompilerMessage> CompilerMessages) CompileText(string input, string filename)
     {
-        AntlrInputStream inputStream = new AntlrInputStream(input);
+        Ic11InputStream inputStream = new Ic11InputStream(input, filename);
         Ic11Lexer lexer = new Ic11Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
         Ic11Parser parser = new Ic11Parser(commonTokenStream);
 
         var tree = parser.program(); // Assuming 'program' is the entry point of your grammar
 
-        var flowContext = new FlowContext();
+        var flowContext = new FlowContext(filename);
         var flowAnalyzer = new ControlFlowBuilderVisitor(flowContext);
         flowAnalyzer.Visit(tree);
 
@@ -95,6 +114,10 @@ public class Program
         new RegisterVisitor(flowContext).DoWork();
         new MethodsRegisterRangesDistributor(flowContext).DoWork();
         var instructions = new Ic10CommandGenerator(flowContext).Visit(flowContext.Root);
+        if (flowContext.CompilerMessages.Any(m => m.Severity == Severity.Error))
+        {
+            return ("", flowContext.CompilerMessages);
+        }
 
         UselessInstructionRemover.Remove(instructions);
         LabelsRemoval.RemoveLabels(instructions);
@@ -104,7 +127,7 @@ public class Program
         foreach (var item in instructions)
             output.AppendLine(item.Render());
 
-        return output.ToString();
+        return (output.ToString(), flowContext.CompilerMessages);
     }
 
     private enum PathType

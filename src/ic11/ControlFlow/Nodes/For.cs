@@ -15,6 +15,10 @@ public class For : Node, IStatement, IStatementsContainer, IExpressionContainer
     public bool HasStatement1;
     public bool HasStatement2;
 
+    public For(SourceLocation sourceLocation): base(sourceLocation)
+    {
+    }
+
     public IEnumerable<INodeExpression> Expressions
     {
         get

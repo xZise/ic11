@@ -8,7 +8,7 @@ public class VariableAssignment : Node, IStatement, IExpressionContainer
     public readonly INodeExpression Expression;
     public Variable? Variable;
 
-    public VariableAssignment(string name, INodeExpression expression)
+    public VariableAssignment(string name, SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Name = name;
         Expression = expression;

@@ -19,7 +19,7 @@ public class UnaryOperation : Node, INodeExpression, IExpressionContainer
         }
     }
 
-    public UnaryOperation(INodeExpression operand, string operation)
+    public UnaryOperation(SourceLocation sourceLocation, INodeExpression operand, string operation): base(sourceLocation)
     {
         Operand = operand;
         operand.Parent = this;

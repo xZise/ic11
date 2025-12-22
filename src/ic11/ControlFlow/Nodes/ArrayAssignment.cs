@@ -12,7 +12,7 @@ public class ArrayAssignment : Node, IStatement, IExpressionContainer
 
     public override int IndexSize => 2;
 
-    public ArrayAssignment(string name, INodeExpression indexExpression, INodeExpression valueExpression)
+    public ArrayAssignment(string name, SourceLocation sourceLocation, INodeExpression indexExpression, INodeExpression valueExpression): base(sourceLocation)
     {
         Name = name;
 

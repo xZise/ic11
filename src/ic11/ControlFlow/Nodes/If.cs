@@ -15,7 +15,7 @@ public class If : Node, IStatement, IStatementsContainer, IExpressionContainer
             ? IfStatements
             : ElseStatements;
 
-    public If(INodeExpression expression)
+    public If(SourceLocation sourceLocation, INodeExpression expression): base(sourceLocation)
     {
         Expression = expression;
         expression.Parent = this;

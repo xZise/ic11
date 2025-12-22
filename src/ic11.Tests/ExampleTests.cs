@@ -18,9 +18,10 @@ public class ExampleTests
         }
 
         string code = File.ReadAllText(filename);
-        var instructions = Program.CompileText(code);
+        (var Instructions, var CompilerMessages) = Program.CompileText(code, filename);
 
-        Assert.IsFalse(string.IsNullOrWhiteSpace(instructions));
+        Assert.IsFalse(CompilerMessages.Any(m => m.Severity == ControlFlow.Messages.Severity.Error));
+        Assert.AreNotEqual(0, Instructions.Length);
     }
 
     public static IEnumerable<object[]> GetExampleFiles()

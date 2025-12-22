@@ -12,8 +12,8 @@ public class BatchAssignment : Node, IStatement, IExpressionContainer
     public readonly string MemberName;
     public override int IndexSize => 2;
 
-    public BatchAssignment(INodeExpression deviceTypeHashExpr, INodeExpression? nameHashExpr, INodeExpression? targetIndexExpression,
-        INodeExpression valueExpr, string memberName, DeviceTarget target)
+    public BatchAssignment(SourceLocation sourceLocation, INodeExpression deviceTypeHashExpr, INodeExpression? nameHashExpr, INodeExpression? targetIndexExpression,
+        INodeExpression valueExpr, string memberName, DeviceTarget target): base(sourceLocation)
     {
         DeviceTypeHashExpr = deviceTypeHashExpr;
         NameHashExpr = nameHashExpr;
