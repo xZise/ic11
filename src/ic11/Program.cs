@@ -96,7 +96,7 @@ public class Program
         new MethodsRegisterRangesDistributor(flowContext).DoWork();
         var instructions = new Ic10CommandGenerator(flowContext).Visit((Root)flowContext.Root);
 
-        UselessMoveRemover.Remove(instructions);
+        UselessInstructionRemover.Remove(instructions);
         LabelsRemoval.RemoveLabels(instructions);
 
         var output = new StringBuilder();
