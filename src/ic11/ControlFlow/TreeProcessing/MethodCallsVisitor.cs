@@ -3,17 +3,14 @@ using ic11.ControlFlow.NodeInterfaces;
 using ic11.ControlFlow.Nodes;
 
 namespace ic11.ControlFlow.TreeProcessing;
-public class MethodCallsVisitor : ControlFlowTreeVisitorBase<object?>
+public class MethodCallsVisitor
 {
-    protected override Type VisitorType => typeof(MethodCallsVisitor);
-
     private readonly FlowContext _flowContext;
     private readonly List<MethodCall> _methodCalls = new();
 
     public MethodCallsVisitor(FlowContext context)
     {
         _flowContext = context;
-        AllowMethodSkip = true;
     }
 
     public void VisitRoot(Root root)
