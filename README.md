@@ -54,3 +54,4 @@ The following changes are included in here compared to 1.41.0:
 * Removing unnecessary casts between `IExpression`, `IStatement` and `INode` ([#22](https://github.com/Raibo/ic11/pull/22))
 * Support unbalanced block/statement in if-else ([#18](https://github.com/Raibo/ic11/pull/18))
 * Remove jumps to labels without code between them
+* Run tests for each example ([#19](https://github.com/Raibo/ic11/pull/19))
