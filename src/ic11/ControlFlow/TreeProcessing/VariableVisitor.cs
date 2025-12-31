@@ -38,7 +38,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
             VisitNode(statement);
     }
 
-    private Variable? VisitNode(INode node)
+    private Variable? VisitNode(INode node, Variable? targetVariable = null)
     {
         if (_preciselyTreatedNodes.Contains(node.GetType()))
             return Visit(node);
@@ -62,7 +62,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
         if (node is INodeExpression ex)
         {
             if (ex.CtKnownValue is null)
-                ex.Variable = node.Scope!.ClaimNewVariable(node.IndexInScope);
+                ex.Variable = targetVariable ?? node.Scope!.ClaimNewVariable(node.IndexInScope);
 
             if (IsVoidCallAsExpression(node))
                 throw new Exception($"Void method used as an expression");
@@ -170,7 +170,7 @@ public class VariableVisitor : ControlFlowTreeVisitorBase<Variable?>
 
         node.Variable = targetVariable.Variable;
 
-        var expressionVariable = VisitNode(node.Expression);
+        var expressionVariable = VisitNode(node.Expression, targetVariable.Variable);
 
         if (expressionVariable is not null)
             expressionVariable.LastReferencedIndex = node.IndexInScope;
