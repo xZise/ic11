@@ -110,6 +110,7 @@ public class Program
         }
 
         UselessInstructionRemover.Remove(instructions);
+        UnreachableCodeRemover.Remove(instructions);
         LabelsRemoval.RemoveLabels(instructions);
 
         var output = new StringBuilder();
