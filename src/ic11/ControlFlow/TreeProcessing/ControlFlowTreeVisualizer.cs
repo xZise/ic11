@@ -63,6 +63,23 @@ public class ControlFlowTreeVisualizer : ControlFlowTreeVisitorBase<object?>
         return null;
     }
 
+    public override object Visit(INode node)
+    {
+        try
+        {
+            return base.Visit(node)!;
+        }
+        catch (NoVisitException)
+        {
+            WriteLine($"Unhandled {node.GetType().Name}{Tags(node)}");
+            if (node is IExpressionContainer ec)
+                VisitExpressions(ec.Expressions);
+            if (node is IStatementsContainer sc)
+                VisitStatements(sc.Statements);
+            return default!;
+        }
+    }
+
     private object? Visit(PinDeclaration node)
     {
         WriteLine($"PinDeclaration (Name {node.Name}, Device {node.Device}){Tags(node)}");
@@ -116,6 +133,15 @@ public class ControlFlowTreeVisualizer : ControlFlowTreeVisitorBase<object?>
         foreach (var item in statements)
             Visit(item);
 
+        _depth--;
+        return null;
+    }
+
+    private object? VisitExpressions(IEnumerable<INodeExpression> expressions)
+    {
+        _depth++;
+        foreach (var item in expressions)
+            Visit(item);
         _depth--;
         return null;
     }
@@ -228,11 +254,7 @@ public class ControlFlowTreeVisualizer : ControlFlowTreeVisitorBase<object?>
     private object? Visit(MethodCall node)
     {
         WriteLine($"Method call {node.Name}(. . .){Tags(node)}");
-
-        _depth++;
-        foreach (var item in node.ArgumentExpressions)
-            Visit(item);
-        _depth--;
+        VisitExpressions(node.Expressions);
         return null;
     }
 
@@ -275,36 +297,21 @@ public class ControlFlowTreeVisualizer : ControlFlowTreeVisitorBase<object?>
     private object? Visit(ArrayDeclaration node)
     {
         WriteLine($"Array decl{Tags(node)}");
-        _depth++;
-
-        foreach (INodeExpression item in node.Expressions)
-            Visit(item);
-
-        _depth--;
+        VisitExpressions(node.Expressions);
         return null;
     }
 
     private object? Visit(ArrayAssignment node)
     {
         WriteLine($"Array assignment{Tags(node)}");
-        _depth++;
-
-        foreach (INodeExpression item in node.Expressions)
-            Visit(item);
-
-        _depth--;
+        VisitExpressions(node.Expressions);
         return null;
     }
 
     private object? Visit(ArrayAccess node)
     {
         WriteLine($"Array access{Tags(node)}");
-        _depth++;
-
-        foreach (INodeExpression item in node.Expressions)
-            Visit(item);
-
-        _depth--;
+        VisitExpressions(node.Expressions);
         return null;
     }
 }

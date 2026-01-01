@@ -6,6 +6,11 @@ using System.Reflection;
 namespace ic11.ControlFlow.TreeProcessing;
 public abstract class ControlFlowTreeVisitorBase<TResult>
 {
+    public class NoVisitException(Type nodeType): Exception($"No {nameof(Visit)} method for node type {nodeType.Name}")
+    {
+        public Type NodeType => nodeType;
+    }
+
     public bool AllowMethodSkip = false;
     public TResult SkippedReturnValue = default!;
 
@@ -38,7 +43,7 @@ public abstract class ControlFlowTreeVisitorBase<TResult>
             return preciseMethod;
 
         if (!AllowMethodSkip)
-            throw new Exception($"No {nameof(Visit)} method for node type {nodeType.Name}");
+            throw new NoVisitException(nodeType);
 
         return null;
     }

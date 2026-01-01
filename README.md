@@ -56,3 +56,4 @@ The following changes are included in here compared to 1.41.0:
 * Remove jumps to labels without code between them
 * Run tests for each example ([#19](https://github.com/Raibo/ic11/pull/19))
 * Cleaning up some parts of the code ([#26](https://github.com/Raibo/ic11/pull/26))
+* Do not crash for unsupported nodes in visualizer
