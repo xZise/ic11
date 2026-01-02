@@ -51,4 +51,4 @@ dotnet publish src/ic11/ic11.csproj -c Release -r win-x64 --self-contained -p:Pu
 # Differences to original repository
 
 The following changes are included in here compared to 1.41.0:
-* Currently none
+* Removing unnecessary casts between `IExpression`, `IStatement` and `INode` ([#22](https://github.com/Raibo/ic11/pull/22))
