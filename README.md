@@ -1,5 +1,8 @@
 # IC11: Compiler for Stationeers Game IC10 Assembly
 
+> This is a fork of the original repository which may contain patches to be
+> upstreamed.
+
 A tool that translates (compiles) a high-level language program to an IC10 assembly for the Stationeers game. 
 
 The language features a C-like syntax and supports basic instructions, including if/then/else, while loops, function calls, and return values.
@@ -44,3 +47,8 @@ Build a single exe:
 ```bash
 dotnet publish src/ic11/ic11.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./publish
 ```
+
+# Differences to original repository
+
+The following changes are included in here compared to 1.41.0:
+* Currently none
