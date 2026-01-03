@@ -198,13 +198,13 @@ public class VariableVisitor : ControlFlowContextTreeVisitorBase<Variable?>
 
     private Variable? Visit(PinDeclaration node)
     {
-        if (_root.DevicePinMap.Values.Contains(node.Device))
-            throw new CompilerMessageException($"Pin for {node.Device} already defined", node.SourceLocation);
+        (var existingName, var existingDevice) = _root.TryAdd(node);
+        if (existingDevice is not null)
+            throw new CompilerMessageException($"Pin for {node.Device} already defined in {existingDevice.SourceLocation}", node.SourceLocation);
 
-        if (_root.DevicePinMap.ContainsKey(node.Name))
-            throw new CompilerMessageException($"Pin {node.Name} already defined", node.SourceLocation);
+        if (existingName is not null)
+            throw new CompilerMessageException($"Pin {node.Name} already defined in {existingName.SourceLocation}", node.SourceLocation);
 
-        _root.DevicePinMap[node.Name] = node.Device;
         return null;
     }
 
