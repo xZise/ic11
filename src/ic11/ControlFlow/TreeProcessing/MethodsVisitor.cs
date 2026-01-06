@@ -46,23 +46,13 @@ public class MethodsVisitor : ControlFlowContextTreeVisitorBase<bool>
 
     private bool ContainReturn(IEnumerable<IStatement> statements)
     {
-        bool foundReturnStatement = false;
-
         foreach (INode statement in statements)
         {
-            if (foundReturnStatement)
-            {
-                statement.IsUnreachableCode = true;
-                continue;
-            }
-
-            var guaranteedReturn = Visit(statement);
-
-            if (guaranteedReturn)
-                foundReturnStatement = true;
+            if (Visit(statement))
+                return true;
         }
 
-        return foundReturnStatement;
+        return false;
     }
 
     private void Visit(MethodDeclaration node)
