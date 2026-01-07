@@ -1,19 +1,20 @@
-﻿using ic11.ControlFlow.NodeInterfaces;
+﻿using System.Diagnostics.CodeAnalysis;
+using ic11.ControlFlow.NodeInterfaces;
 
 namespace ic11.ControlFlow.Nodes;
 public class Return : Node, IStatement, IExpressionContainer
 {
-    public bool HasValue;
-    public INodeExpression? Expression;
+    [MemberNotNullWhen(true, nameof(Expression))]
+    public bool HasValue => Expression != null;
+    public INodeExpression? Expression { get; }
 
     public Return()
     {
-        HasValue = false;
+        Expression = null;
     }
 
     public Return(INodeExpression expression)
     {
-        HasValue = true;
         Expression = expression;
         expression.Parent = this;
     }
