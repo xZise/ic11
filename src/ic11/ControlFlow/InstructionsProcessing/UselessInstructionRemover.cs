@@ -14,11 +14,41 @@ public static class UselessInstructionRemover
                         instructions.RemoveAt(i);
                     break;
                 case Jump jump:
-                    for (int j = i + 1; j < instructions.Count && instructions[j] is Label label; j++)
+/*
+Searches for any code after an unconditional jump (without link)
+
+j jumpLabel
+# unreachable code
+otherLabel:
+# maybe reachable code
+jumpLabel:
+
+Searches for any jumps immediately followed by labels (one of which is the destination)
+
+j*,b* jumpLabel
+otherLabel:
+jumpLabel:
+yetAnotherLabel:
+*/
+                    bool foundLabel = false;
+                    for (int j = i + 1; j < instructions.Count; j++)
                     {
-                        if (label.Name == jump.Destination)
+                        if (instructions[j] is Label label)
                         {
-                            instructions.RemoveAt(i);
+                            if (label.Name == jump.Destination)
+                            {
+                                instructions.RemoveAt(i);
+                                j--;
+                            }
+                            foundLabel = true;
+                        }
+                        else if (!foundLabel && jump.Type == DataHolders.JumpType.J)
+                        {
+                            instructions.RemoveAt(j);
+                            j--;
+                        }
+                        else
+                        {
                             break;
                         }
                     }
