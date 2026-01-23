@@ -6,7 +6,6 @@ public class NullaryOperation : Node, INodeExpression
 {
     public readonly string Operation;
     public Variable? Variable { get; set; }
-    public decimal? CtKnownValue => null;
 
     public NullaryOperation(SourceLocation sourceLocation, string operation): base(sourceLocation)
     {

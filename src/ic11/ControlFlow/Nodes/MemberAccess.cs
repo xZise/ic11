@@ -11,7 +11,6 @@ public class MemberAccess : Node, INodeExpression, IExpressionContainer
     public readonly INodeExpression? TargetIndexExpr;
 
     public Variable? Variable { get; set; }
-    public decimal? CtKnownValue => null;
 
     public MemberAccess(string name, SourceLocation sourceLocation, string memberName): base(sourceLocation)
     {

@@ -5,6 +5,6 @@ namespace ic11.ControlFlow.NodeInterfaces;
 public interface IExpression
 {
     Variable? Variable { get; set; }
-    decimal? CtKnownValue { get; }
+    decimal? CtKnownValue { get => null; }
     string Render() => CtKnownValue?.ToString(CultureInfo.InvariantCulture) ?? Variable!.Register;
 }

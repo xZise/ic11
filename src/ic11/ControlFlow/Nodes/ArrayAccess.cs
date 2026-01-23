@@ -7,7 +7,6 @@ public class ArrayAccess : Node, INodeExpression, IExpressionContainer
     public readonly string Name;
     public readonly INodeExpression IndexExpression;
     public Variable? Variable { get; set; }
-    public decimal? CtKnownValue => null;
     public UserDefinedVariable? ArrayAddressVariable;
 
     public ArrayAccess(string name, SourceLocation sourceLocation, INodeExpression indexExpression): base(sourceLocation)

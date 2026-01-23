@@ -327,9 +327,6 @@ public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
 
     private object? Visit(Nodes.NullaryOperation node)
     {
-        if (node.CtKnownValue.HasValue)
-            return null;
-
         Instructions.Add(new Instructions.NullaryOperation(node.Variable!, node.Operation));
 
         return null;

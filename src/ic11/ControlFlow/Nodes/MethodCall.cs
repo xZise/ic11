@@ -8,7 +8,6 @@ public class MethodCall : Node, IStatement, INodeExpression, IExpressionContaine
     public MethodDeclaration? Method;
     public readonly List<INodeExpression> ArgumentExpressions;
     public Variable? Variable { get; set; }
-    public decimal? CtKnownValue => null;
     public HashSet<string> RegistersToPush;
 
     public override int IndexSize => 2;
