@@ -9,7 +9,7 @@ public class FlowContext
     public INode CurrentNode;
     public readonly Dictionary<string, SourceLocation> IncludedFiles = new();
     public readonly Dictionary<string, MethodDeclaration> DeclaredMethods = new();
-    public readonly List<IStatement> CurrentStatementList;
+    public List<IStatement> CurrentStatementList => Root.Statements;
     public readonly List<UserDefinedVariable> AllUserDefinedVariables = new();
     public readonly List<UserDefinedConstant> AllUserDefinedConstants = new();
     public readonly List<CompilerMessage> CompilerMessages = new();
@@ -19,7 +19,6 @@ public class FlowContext
         var root = new Root(filename);
         CurrentNode = root;
         Root = root;
-        CurrentStatementList = root.Statements;
     }
 
     public void Include(FlowContext other)
