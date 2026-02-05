@@ -113,23 +113,26 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         return null;
     }
 
-    public override INodeExpression? VisitDeviceStackClear([NotNull] DeviceStackClearContext context)
+    private DeviceAddress VisitDeviceContext(DeviceContext context)
     {
-        var device = context.identifier.Text;
+        if (context.BASE_DEVICE() is not null)
+            return DeviceAddress.FromName("db");
+        else if (context.IDENTIFIER() is not null)
+            return DeviceAddress.FromName(context.identifier.Text);
+        else if (context.deviceIdExpr is not null)
+            return DeviceAddress.FromDeviceId(Visit(context.deviceIdExpr));
+        else if (context.pinIdxExpr is not null)
+            return DeviceAddress.FromPinsIndex(Visit(context.pinIdxExpr));
 
-        if (context.identifier.Type == BASE_DEVICE)
-            device = "db";
-
-        var newNode = new StatementParam0(SourceLocation.FromRuleContext(context), $"clr {device}");
-        AddToStatements(newNode);
-
-        return null;
+        throw new Exception("This case should've been handled");
     }
 
-    public override INodeExpression? VisitDeviceWithIdStackClear([NotNull] DeviceWithIdStackClearContext context)
+    public override INodeExpression? VisitDeviceStackClear([NotNull] DeviceStackClearContext context)
     {
-        var expression = Visit(context.deviceIdxExpr)!;
-        var newNode = new StatementParam1(SourceLocation.FromRuleContext(context), "clrd", expression);
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+        var device = VisitDeviceContext(context.device());
+
+        DeviceStackClear newNode = new(sourceLocation, device);
         AddToStatements(newNode);
 
         return null;
@@ -225,70 +228,60 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         return null;
     }
 
-    public override INodeExpression? VisitMemberAssignment([NotNull] MemberAssignmentContext context)
+    public override INodeExpression? VisitDeviceAssignment([NotNull] DeviceAssignmentContext context)
     {
-        var valueExpr = Visit(context.valueExpr)!;
-
-        var member = context.member.Text;
-        var device = context.identifier.Text;
-
-        if (context.identifier.Type == BASE_DEVICE)
-            device = "db";
-
-        var newNode = new MemberAssignment(device, SourceLocation.FromRuleContext(context), member, valueExpr);
-        AddToStatements(newNode);
-
-        return null;
-    }
-
-    public override INodeExpression? VisitMemberExtendedAssignment([NotNull] MemberExtendedAssignmentContext context)
-    {
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
         var valueExpr = Visit(context.valueExpr);
-        var targetIdxExpr = Visit(context.targetIdxExpr);
+        var member = context.member.Text;
+        var device = VisitDeviceContext(context.device());
 
-        var member = context.member?.Text;
-        var device = context.identifier.Text;
-
-        if (context.identifier.Type == BASE_DEVICE)
-            device = "db";
-
-        var newNode = new MemberAssignment(device, SourceLocation.FromRuleContext(context), GetDeviceTarget(context.prop.Type), member, targetIdxExpr, valueExpr);
+        MemberAssignment newNode = new(sourceLocation, device, member, valueExpr);
         AddToStatements(newNode);
 
         return null;
     }
 
-    public override INodeExpression VisitMemberAccess([NotNull] MemberAccessContext context)
+    public override INodeExpression? VisitDeviceExtendedAssignment([NotNull] DeviceExtendedAssignmentContext context)
     {
-        var member = context.member.Text;
-        var device = context.identifier.Text;
-
-        if (context.identifier.Type == BASE_DEVICE)
-            device = "db";
-
-        var newNode = new MemberAccess(device, SourceLocation.FromRuleContext(context), member);
-
-        return newNode;
-    }
-
-    public override INodeExpression? VisitExtendedMemberAccess([NotNull] ExtendedMemberAccessContext context)
-    {
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+        var target = GetDeviceTarget(context.prop.Type);
+        var valueExpr = Visit(context.valueExpr)!;
         var targetIdxExpr = Visit(context.targetIdxExpr)!;
 
         var member = context.member?.Text;
-        var device = context.identifier.Text;
+        var device = VisitDeviceContext(context.device());
 
-        if (context.identifier.Type == BASE_DEVICE)
-            device = "db";
+        MemberAssignment newNode = new(sourceLocation, device, target, member, targetIdxExpr, valueExpr);
+        AddToStatements(newNode);
 
-        var target = GetDeviceTarget(context.prop.Type);
+        return null;
+    }
 
-        var newNode = new MemberAccess(device, SourceLocation.FromRuleContext(context), target, targetIdxExpr, member);
+    public override INodeExpression VisitDeviceAccess([NotNull] DeviceAccessContext context)
+    {
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+        var member = context.member.Text;
+        var device = VisitDeviceContext(context.device());
 
+        MemberAccess newNode = new(sourceLocation, device, member);
         return newNode;
     }
 
-    public override INodeExpression? VisitBatchAccess([NotNull] BatchAccessContext context)
+    public override INodeExpression VisitExtendedDeviceAccess([NotNull] ExtendedDeviceAccessContext context)
+    {
+        SourceLocation sourceLocation = SourceLocation.FromRuleContext(context);
+        var target = GetDeviceTarget(context.prop.Type);
+        var targetIdxExpr = Visit(context.targetIdxExpr);
+
+        var member = context.member?.Text;
+        var device = VisitDeviceContext(context.device());
+
+        MemberAccess newNode = new(sourceLocation, device, target, targetIdxExpr, member);
+        return newNode;
+    }
+
+
+    public override INodeExpression VisitBatchAccess([NotNull] BatchAccessContext context)
     {
         var typeHash = Visit(context.deviceTypeHashExpr);
 
@@ -418,35 +411,6 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         return newNode;
     }
 
-    public override INodeExpression? VisitDeviceWithIdAssignment([NotNull] DeviceWithIdAssignmentContext context)
-    {
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var value = Visit(context.valueExpr)!;
-
-        var deviceProperty = context.member.Text;
-
-        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, value, deviceProperty);
-        AddToStatements(newNode);
-
-        return null;
-    }
-
-    public override INodeExpression? VisitDeviceWithIdExtendedAssignment([NotNull] DeviceWithIdExtendedAssignmentContext context)
-    {
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var targetIdxExpr = Visit(context.targetIdxExpr)!;
-        var value = Visit(context.valueExpr)!;
-
-        var deviceProperty = context.member?.Text;
-
-        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, value,
-            GetDeviceTarget(context.prop.Type), deviceProperty);
-
-        AddToStatements(newNode);
-
-        return null;
-    }
-
     public override INodeExpression? VisitBatchAssignment([NotNull] BatchAssignmentContext context)
     {
         var deviceTypeHash = Visit(context.deviceTypeHashExpr);
@@ -473,76 +437,6 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         AddToStatements(newNode);
 
         return null;
-    }
-
-    public override INodeExpression? VisitDeviceWithIndexAssignment([NotNull] DeviceWithIndexAssignmentContext context)
-    {
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var value = Visit(context.valueExpr)!;
-
-        var deviceProperty = context.member.Text;
-
-        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, value, deviceProperty);
-        AddToStatements(newNode);
-
-        return null;
-    }
-
-    public override INodeExpression? VisitDeviceWithIndexExtendedAssignment([NotNull] DeviceWithIndexExtendedAssignmentContext context)
-    {
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var targetIdxExpr = Visit(context.targetIdxExpr)!;
-        var valueExpr = Visit(context.valueExpr)!;
-
-        var deviceProperty = context.member?.Text;
-
-        var newNode = new DeviceWithIndexAssignment(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, valueExpr, GetDeviceTarget(context.prop.Type), deviceProperty);
-        AddToStatements(newNode);
-
-        return null;
-    }
-
-    public override INodeExpression? VisitDeviceIndexAccess([NotNull] DeviceIndexAccessContext context)
-    {
-        var member = context.member.Text;
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-
-        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, member);
-
-        return newNode;
-    }
-
-    public override INodeExpression? VisitExtendedDeviceIndexAccess([NotNull] ExtendedDeviceIndexAccessContext context)
-    {
-        var member = context.member?.Text;
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var targetIdxExpr = Visit(context.targetIdxExpr)!;
-
-        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Pin, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
-
-        return newNode;
-    }
-
-    public override INodeExpression VisitDeviceIdAccess([NotNull] DeviceIdAccessContext context)
-    {
-        var member = context.member.Text;
-
-        var deviceIdExpr = Visit(context.expression())!;
-
-        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdExpr, DeviceIndexType.Id, member);
-
-        return newNode;
-    }
-
-    public override INodeExpression VisitExtendedDeviceIdAccess([NotNull] ExtendedDeviceIdAccessContext context)
-    {
-        var member = context.member?.Text;
-        var deviceIdxExpr = Visit(context.deviceIdxExpr)!;
-        var targetIdxExpr = Visit(context.targetIdxExpr)!;
-
-        var newNode = new DeviceWithIndexAccess(SourceLocation.FromRuleContext(context), deviceIdxExpr, DeviceIndexType.Id, targetIdxExpr, GetDeviceTarget(context.prop.Type), member);
-
-        return newNode;
     }
 
     public override INodeExpression? VisitContinueStatement([NotNull] ContinueStatementContext context)
@@ -639,7 +533,7 @@ public class ControlFlowBuilderVisitor : Ic11BaseVisitor<INodeExpression?>
         return null;
     }
 
-    public override INodeExpression? VisitArrayElementAccess([NotNull] ArrayElementAccessContext context)
+    public override INodeExpression VisitArrayElementAccess([NotNull] ArrayElementAccessContext context)
     {
         var indexExpr = Visit(context.indexExpr);
         var newNode = new ArrayAccess(context.IDENTIFIER().GetText(), SourceLocation.FromRuleContext(context), indexExpr);

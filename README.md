@@ -60,3 +60,4 @@ The following changes are included in here compared to 1.41.0:
 * On assignment write result of previous node directly into the assigned register
 * Use messages to report compiler errors and warnings instead of throwing exceptions
 * Add suppport for including other files (see [issue #13](https://github.com/Raibo/ic11/issues/13))
+* Reuse logic and grammar for addressing devices differently ([#29](https://github.com/Raibo/ic11/pull/29))

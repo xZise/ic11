@@ -306,6 +306,14 @@ public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
         return null;
     }
 
+    private object? Visit(Nodes.DeviceStackClear node)
+    {
+        if (node.Device.Expression is not null)
+            Visit(node.Device.Expression);
+        Instructions.Add(new Instructions.DeviceStackClear(node.Device));
+        return null;
+    }
+
     private object? Visit(Nodes.MemberAssignment node)
     {
         Visit(node.ValueExpression);
@@ -313,13 +321,16 @@ public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
         if (node.TargetIndexExpr is not null)
             Visit(node.TargetIndexExpr);
 
+        if (node.Device.Expression is not null)
+            Visit(node.Device.Expression);
+
         if (node.Target == DeviceTarget.Device)
         {
-            Instructions.Add(new Instructions.MemberAssignment(node.Name, node.MemberName!, node.ValueExpression));
+            Instructions.Add(new Instructions.MemberAssignment(node.Device, node.MemberName!, node.ValueExpression));
         }
         else
         {
-            Instructions.Add(new Instructions.MemberAssignment(node.Name, node.Target, node.MemberName, node.TargetIndexExpr!, node.ValueExpression));
+            Instructions.Add(new Instructions.MemberAssignment(node.Device, node.Target, node.MemberName, node.TargetIndexExpr!, node.ValueExpression));
         }
 
         return null;
@@ -373,36 +384,19 @@ public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
 
     private object? Visit(Nodes.MemberAccess node)
     {
-        if (node.TargetIndexExpr is not null)
-            Visit(node.TargetIndexExpr);
-
-        if (node.Target == DeviceTarget.Device)
-        {
-            Instructions.Add(new Instructions.MemberAccess(node.Variable!, node.Name, node.MemberName!));
-        }
-        else
-        {
-            Instructions.Add(new Instructions.MemberAccess(node.Variable!, node.Name, node.TargetIndexExpr!, node.Target, node.MemberName));
-        }
-
-        return null;
-    }
-
-    private object? Visit(Nodes.DeviceWithIndexAccess node)
-    {
-        Visit(node.DeviceIndexExpr);
+        if (node.Device.Expression is not null)
+            Visit(node.Device.Expression);
 
         if (node.TargetIndexExpr is not null)
             Visit(node.TargetIndexExpr);
 
         if (node.Target == DeviceTarget.Device)
         {
-            Instructions.Add(new Instructions.DeviceWithIndexAccess(node.Variable!, node.DeviceIndexExpr, node.IndexType, node.MemberName!));
+            Instructions.Add(new Instructions.MemberAccess(node.Variable!, node.Device, node.MemberName!));
         }
         else
         {
-            Instructions.Add(new Instructions.DeviceWithIndexAccess(node.Variable!, node.DeviceIndexExpr, node.IndexType, node.TargetIndexExpr!,
-                node.Target, node.MemberName));
+            Instructions.Add(new Instructions.MemberAccess(node.Variable!, node.Device, node.TargetIndexExpr!, node.Target, node.MemberName));
         }
 
         return null;
@@ -420,28 +414,6 @@ public class Ic10CommandGenerator : ControlFlowContextTreeVisitorBase<object?>
 
         Instructions.Add(new Instructions.BatchAccess(node.Variable!, node.DeviceTypeHashExpr, node.NameHashExpr, node.TargetIndexExpr,
             node.Target, node.MemberName, node.BatchMode));
-
-        return null;
-    }
-
-    private object? Visit(Nodes.DeviceWithIndexAssignment node)
-    {
-        Visit(node.ValueExpr);
-
-        if (node.TargetIndexExpr is not null)
-            Visit(node.TargetIndexExpr);
-
-        Visit(node.DeviceIndexExpr);
-
-        if (node.Target == DeviceTarget.Device)
-        {
-            Instructions.Add(new Instructions.DeviceWithIndexAssignment(node.DeviceIndexExpr, node.IndexType, node.MemberName!, node.ValueExpr));
-        }
-        else
-        {
-            Instructions.Add(new Instructions.DeviceWithIndexAssignment(node.DeviceIndexExpr, node.IndexType, node.TargetIndexExpr!, node.Target,
-                node.MemberName, node.ValueExpr));
-        }
 
         return null;
     }
