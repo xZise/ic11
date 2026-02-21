@@ -104,6 +104,7 @@ public class Program
         new RegisterVisitor(flowContext).DoWork();
         new MethodsRegisterRangesDistributor(flowContext).DoWork();
         var instructions = new Ic10CommandGenerator(flowContext).Visit(flowContext.Root);
+        new UnusedVariablesVisitor(flowContext).Visit(flowContext.Root);
         new UnreachableCodeVisitor(flowContext).Visit(flowContext.Root);
         if (flowContext.CompilerMessages.Any(m => m.Severity == Severity.Error))
         {
